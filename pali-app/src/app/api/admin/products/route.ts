@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
+import { isAdmin } from '@/lib/auth'
 import { z } from 'zod'
 
 const productSchema = z.object({
@@ -11,12 +12,6 @@ const productSchema = z.object({
   image_url: z.string().optional(),
   is_visible: z.boolean().default(false),
 })
-
-async function isAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.email?.endsWith('@pali.co.il') || user?.app_metadata?.role === 'admin'
-}
 
 export async function POST(req: NextRequest) {
   if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })

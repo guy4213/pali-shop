@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-
-async function isAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.email?.endsWith('@pali.co.il') || user?.app_metadata?.role === 'admin'
-}
+import { createServiceClient } from '@/lib/supabase/server'
+import { isAdmin } from '@/lib/auth'
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
