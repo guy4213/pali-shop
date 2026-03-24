@@ -84,15 +84,8 @@ export default function ProductPage({ product, referralCode }: ProductPageProps)
 
       if (!res.ok) throw new Error(data.error || 'שגיאה ביצירת ההזמנה')
 
-      toast({
-        title: 'ההזמנה התקבלה!',
-        description: 'תוכל לתבוע מתנה עם הקוד שתקבל בחבילה.',
-      })
-      setOrderOpen(false)
-
-      if (referralCode) {
-      router.push(`/orders/${data.order_id}`)
-      }
+    setOrderOpen(false)
+    router.push(`/orders/${data.order_id}`)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'שגיאה ביצירת ההזמנה'
       toast({ title: 'שגיאה', description: message, variant: 'destructive' })

@@ -18,7 +18,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header userEmail={user?.email} />
+      <Header  />
       <main className="flex-1">
         {product ? (
           <ProductPage product={product} />

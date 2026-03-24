@@ -31,7 +31,7 @@ export default async function SharePage({ params }: SharePageProps) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header userEmail={user?.email} />
+      <Header  />
       {/* Track the click client-side */}
       <ReferralTracker code={code} />
       <main className="flex-1">

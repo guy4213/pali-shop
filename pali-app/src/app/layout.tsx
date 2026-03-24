@@ -3,6 +3,7 @@ import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp'
 import { CartProvider } from '@/components/providers/CartProvider'
+import { UserProvider } from '@/components/providers/UserProvider'
 
 export const metadata: Metadata = {
   title: 'PALI – חנות עם רווח שגדל',
@@ -21,9 +22,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="antialiased bg-white text-gray-900 min-h-screen">
+         <UserProvider>
         <CartProvider>
           {children}
         </CartProvider>
+        </UserProvider>
         <Toaster />
         <FloatingWhatsApp />
       </body>

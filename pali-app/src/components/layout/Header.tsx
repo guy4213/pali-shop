@@ -22,19 +22,19 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/components/providers/CartProvider'
+import { useUser } from '@/components/providers/UserProvider'
 
-interface HeaderProps {
-  userEmail?: string | null
-  balance?: number
-}
 
-export default function Header({ userEmail, balance }: HeaderProps) {
+export default function Header() {
+    const { userEmail, isAdmin, balance } = useUser()
+
   const [profileOpen, setProfileOpen] = useState(false)
   const [cartHover, setCartHover] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const router = useRouter()
   const supabase = createClient()
   const { items, count, total } = useCart()
+
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -146,14 +146,14 @@ export default function Header({ userEmail, balance }: HeaderProps) {
                     <History size={16} />
                     היסטוריית הזמנות
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/dashboard"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     onClick={() => setProfileOpen(false)}
                   >
                     <Link2 size={16} />
                     הקישורית שלי
-                  </Link>
+                  </Link> */}
                   <Link
                     href="/wallet"
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -170,6 +170,16 @@ export default function Header({ userEmail, balance }: HeaderProps) {
                     <Settings size={16} />
                     הגדרות חשבון
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors font-medium"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <LayoutDashboard size={16} />
+                      פאנל ניהול
+                    </Link>
+                  )}
                   <div className="border-t border-gray-100 mt-1 pt-1">
                     <button
                       onClick={handleLogout}

@@ -54,33 +54,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'המתנה אזלה מהמלאי' }, { status: 400 })
     }
 
-    // Create Supabase auth user (magic link / passwordless)
-    const { data: authData } = await supabase.auth.admin.createUser({
-      email: data.email,
-      email_confirm: true,
-      user_metadata: { name: data.name, phone: data.phone },
-    })
+let authUser = null
 
+const { data: createData } = await supabase.auth.admin.createUser({
+  email: data.email,
+  email_confirm: true,
+  user_metadata: { name: data.name, phone: data.phone },
+})
+
+if (createData?.user) {
+  authUser = createData.user
+} else {
+  // יוזר כבר קיים — מצא אותו לפי אימייל
+  const { data: userList } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+  authUser = userList?.users?.find(u => u.email === data.email) ?? null
+}
     let referrerId: string | null = null
     let referralCode = generateReferralCode()
 
-    if (authData.user) {
+    if (authUser) {
       // Get product_id from the order's referral_code (the referrer's product)
       let productId: string | null = null
-      if (data.referral_code) {
-        const { data: parentReferrer } = await supabase
-          .from('referrers')
+      if (data.order_id) {
+        const { data: order } = await supabase
+          .from('orders')
           .select('product_id')
-          .eq('referral_code', data.referral_code)
+          .eq('id', data.order_id)
           .single()
-        productId = parentReferrer?.product_id || null
+        productId = order?.product_id || null
       }
-
+     if (!productId && data.referral_code) {
+      const { data: parentReferrer } = await supabase
+        .from('referrers')
+        .select('product_id')
+        .eq('referral_code', data.referral_code)
+        .single()
+      productId = parentReferrer?.product_id || null
+    }
+if (!productId) {
+  const { data: defaultProduct } = await supabase
+    .from('products')
+    .select('id')
+    .eq('is_visible', true)
+    .limit(1)
+    .single()
+  productId = defaultProduct?.id || null
+}
       // Create or get referrer record
       const { data: existingReferrer } = await supabase
         .from('referrers')
         .select('id, referral_code')
-        .eq('user_id', authData.user.id)
+        .eq('user_id', authUser.id)
         .single()
 
       if (existingReferrer) {
@@ -104,7 +128,7 @@ export async function POST(req: NextRequest) {
         const { data: newReferrer } = await supabase
           .from('referrers')
           .insert({
-            user_id: authData.user.id,
+            user_id: authUser.id,
             referral_code: referralCode,
             product_id: productId,
           })
