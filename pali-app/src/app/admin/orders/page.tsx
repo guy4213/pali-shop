@@ -28,6 +28,13 @@ export default async function AdminOrdersPage() {
     `)
     .order('created_at', { ascending: false })
 
+
+    const normalizedOrders = (orders ?? []).map(order => ({
+  ...order,
+  products: Array.isArray(order.products) 
+    ? (order.products[0] ?? null) 
+    : order.products
+}))
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -41,7 +48,7 @@ export default async function AdminOrdersPage() {
 
         <h1 className="text-2xl font-black text-gray-900 mb-6">הזמנות</h1>
 
-        <OrdersTable initialOrders={orders ?? []} />
+      <OrdersTable initialOrders={normalizedOrders} />
       </div>
     </div>
   )

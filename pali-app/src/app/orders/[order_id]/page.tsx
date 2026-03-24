@@ -46,7 +46,10 @@ export default async function OrderConfirmationPage({ params }: Props) {
     )
   }
 
-  const productName = (order.products as { name: string } | null)?.name ?? 'מוצר'
+const productObj=Array.isArray(order.products) 
+    ? (order.products[0] ?? null) 
+    : order.products 
+  const productName = (productObj as { name: string } | null)?.name ?? 'מוצר'
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-gray-50 flex flex-col items-center justify-center px-4 py-12">
