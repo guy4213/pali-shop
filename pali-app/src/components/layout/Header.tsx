@@ -15,7 +15,6 @@ import {
   LayoutDashboard,
   ChevronDown,
   History,
-  Link2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,11 +22,13 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/components/providers/CartProvider'
 import { useUser } from '@/components/providers/UserProvider'
+import { usePathname } from 'next/navigation'
 
 
 export default function Header() {
     const { userEmail, isAdmin, balance } = useUser()
 
+  const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
   const [cartHover, setCartHover] = useState(false)
   const [searchValue, setSearchValue] = useState('')
@@ -132,7 +133,7 @@ export default function Header() {
                   </div>
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${pathname === '/dashboard' ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-gray-700 hover:bg-gray-50'}`}
                     onClick={() => setProfileOpen(false)}
                   >
                     <LayoutDashboard size={16} />
@@ -140,23 +141,15 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/orders"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${pathname === '/orders' ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-gray-700 hover:bg-gray-50'}`}
                     onClick={() => setProfileOpen(false)}
                   >
                     <History size={16} />
                     היסטוריית הזמנות
                   </Link>
-                  {/* <Link
-                    href="/dashboard"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setProfileOpen(false)}
-                  >
-                    <Link2 size={16} />
-                    הקישורית שלי
-                  </Link> */}
                   <Link
                     href="/wallet"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${pathname === '/wallet' ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-gray-700 hover:bg-gray-50'}`}
                     onClick={() => setProfileOpen(false)}
                   >
                     <Wallet size={16} />
@@ -164,7 +157,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${pathname === '/profile' ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-gray-700 hover:bg-gray-50'}`}
                     onClick={() => setProfileOpen(false)}
                   >
                     <Settings size={16} />
@@ -173,7 +166,7 @@ export default function Header() {
                   {isAdmin && (
                     <Link
                       href="/admin"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors font-medium"
+                      className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors font-medium ${pathname.startsWith('/admin') ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-yellow-700 hover:bg-yellow-50'}`}
                       onClick={() => setProfileOpen(false)}
                     >
                       <LayoutDashboard size={16} />
