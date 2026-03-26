@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { Package, Users, ArrowDownToLine, Gift } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import AdminProductsTable from './AdminProductsTable'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 export default async function AdminPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,9 +29,7 @@ export default async function AdminPage() {
   ]
 
   return (
-  <div className="flex flex-col min-h-screen bg-gray-50">
-        <Header  />
-      <main className="flex-1">
+    <main className="flex-1">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-black text-gray-900">לוח בקרה – מנהל</h1>
@@ -63,8 +59,6 @@ export default async function AdminPage() {
           <AdminProductsTable initialProducts={products.data || []} />
         </div>
       </div>
-      </main>
-       <Footer />
-    </div>
+    </main>
   )
 }
