@@ -166,7 +166,7 @@ export default function Header() {
                   {isAdmin && (
                     <Link
                       href="/admin"
-                      className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors font-medium ${pathname.startsWith('/admin') ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-yellow-700 hover:bg-yellow-50'}`}
+                      className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors  ${pathname.startsWith('/admin') ? 'bg-yellow-50 text-yellow-700 font-semibold' : 'text-yellow-700 hover:bg-yellow-50'}`}
                       onClick={() => setProfileOpen(false)}
                     >
                       <LayoutDashboard size={16} />
