@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getBalance, WITHDRAWAL_THRESHOLD } from '@/lib/points'
 import { redirect } from 'next/navigation'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 import WalletClient from './WalletClient'
 
 export default async function WalletPage() {
@@ -36,19 +34,15 @@ export default async function WalletPage() {
   ])
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header userEmail={user.email} balance={balance} />
-      <main className="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
-        <WalletClient
-          balance={balance}
-          transactions={transactions.data || []}
-          withdrawalRequests={withdrawalRequests.data || []}
-          referrerId={referrer.id}
-          canWithdraw={balance >= WITHDRAWAL_THRESHOLD}
-          withdrawalThreshold={WITHDRAWAL_THRESHOLD}
-        />
-      </main>
-      <Footer />
-    </div>
+    <main className="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
+      <WalletClient
+        balance={balance}
+        transactions={transactions.data || []}
+        withdrawalRequests={withdrawalRequests.data || []}
+        referrerId={referrer.id}
+        canWithdraw={balance >= WITHDRAWAL_THRESHOLD}
+        withdrawalThreshold={WITHDRAWAL_THRESHOLD}
+      />
+    </main>
   )
 }

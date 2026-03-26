@@ -218,7 +218,7 @@ function GiftPageContent() {
   )
 }
 
-export default function GiftPage() {
+export default function GiftPageWrapper() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">

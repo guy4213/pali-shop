@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getBalance, WITHDRAWAL_THRESHOLD } from '@/lib/points'
 import { redirect } from 'next/navigation'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
@@ -45,18 +43,14 @@ export default async function DashboardPage() {
   const referralUrl = `${siteUrl}/share/${referrer.referral_code}`
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header userEmail={user.email} balance={balance} />
-      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
-        <DashboardClient
-          stats={stats}
-          referralCode={referrer.referral_code}
-          referralUrl={referralUrl}
-          recentClicks={clicksData.data || []}
-          recentCommissions={commissionsData.data || []}
-        />
-      </main>
-      <Footer />
-    </div>
+    <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
+      <DashboardClient
+        stats={stats}
+        referralCode={referrer.referral_code}
+        referralUrl={referralUrl}
+        recentClicks={clicksData.data || []}
+        recentCommissions={commissionsData.data || []}
+      />
+    </main>
   )
 }

@@ -16,6 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { useCart } from '@/components/providers/CartProvider'
 import type { Product } from '@/types'
+import { useRouter } from 'next/navigation'
 
 interface ProductPageProps {
   product: Product
@@ -23,6 +24,7 @@ interface ProductPageProps {
 }
 
 export default function ProductPage({ product, referralCode }: ProductPageProps) {
+  const router = useRouter()
   const [orderOpen, setOrderOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [userBalance, setUserBalance] = useState(0)
@@ -74,8 +76,7 @@ export default function ProductPage({ product, referralCode }: ProductPageProps)
           buyer_email: form.email,
           buyer_phone: form.phone,
           buyer_address: form.address,
-          amount: finalPrice,
-          points_used: pointsUsed > 0 ? pointsUsed : undefined,
+          points_to_redeem: pointsUsed > 0 ? pointsUsed : undefined
         }),
       })
 
@@ -83,15 +84,8 @@ export default function ProductPage({ product, referralCode }: ProductPageProps)
 
       if (!res.ok) throw new Error(data.error || 'שגיאה ביצירת ההזמנה')
 
-      toast({
-        title: 'ההזמנה התקבלה!',
-        description: 'תוכל לתבוע מתנה עם הקוד שתקבל בחבילה.',
-      })
-      setOrderOpen(false)
-
-      if (referralCode) {
-        window.location.href = `/gift?order=${data.order_id}&ref=${referralCode}`
-      }
+    setOrderOpen(false)
+    router.push(`/orders/${data.order_id}`)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'שגיאה ביצירת ההזמנה'
       toast({ title: 'שגיאה', description: message, variant: 'destructive' })

@@ -10,48 +10,60 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { useCart } from '@/components/providers/CartProvider'
+import { useRouter } from 'next/navigation'
 
 export default function CartPage() {
+  const router = useRouter()
   const { items, count, total, removeItem, updateQty, clearCart } = useCart()
   const { toast } = useToast()
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' })
 
-  async function handleCheckout(e: React.FormEvent) {
-    e.preventDefault()
-    if (items.length === 0) return
-    setLoading(true)
-    try {
-      // Submit each item as a separate order
-      for (const item of items) {
-        const res = await fetch('/api/orders/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            product_id: item.product_id,
-            buyer_name: form.name,
-            buyer_email: form.email,
-            buyer_phone: form.phone,
-            buyer_address: form.address,
-            amount: item.price * item.quantity,
-          }),
-        })
-        if (!res.ok) {
-          const { error } = await res.json()
-          throw new Error(error || 'שגיאה ביצירת הזמנה')
-        }
+async function handleCheckout(e: React.FormEvent) {
+  e.preventDefault()
+  if (items.length === 0) return
+  setLoading(true)
+
+  let lastOrderId: string | null = null
+
+  try {
+    for (const item of items) {
+      const res = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id:   item.product_id,
+          buyer_name:   form.name,
+          buyer_email:  form.email,
+          buyer_phone:  form.phone,
+          buyer_address: form.address,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'שגיאה ביצירת הזמנה')
       }
-      toast({ title: 'ההזמנה התקבלה!', description: 'פרטים נשלחו למייל שלך.' })
-      clearCart()
-      setCheckoutOpen(false)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'שגיאה'
-      toast({ title: 'שגיאה', description: message, variant: 'destructive' })
-    } finally {
-      setLoading(false)
+
+      lastOrderId = data.order_id
     }
+
+    clearCart()
+    setCheckoutOpen(false)
+
+    if (lastOrderId) {
+      router.push(`/orders/${lastOrderId}`)
+    }
+
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'שגיאה'
+    toast({ title: 'שגיאה', description: message, variant: 'destructive' })
+  } finally {
+    setLoading(false)
   }
+}
 
   if (count === 0) {
     return (
