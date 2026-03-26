@@ -29,6 +29,14 @@ export default async function OrderConfirmationPage({ params }: Props) {
     .eq('id', order_id)
     .single()
 
+  const { data: existingClaim } = await supabase
+    .from('gift_claims')
+    .select('id')
+    .eq('email', order?.buyer_email ?? '')
+    .maybeSingle()
+
+  const hasClaimedGift = !!existingClaim
+
   if (!order) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 text-center">
@@ -119,8 +127,8 @@ export default async function OrderConfirmationPage({ params }: Props) {
           </div>
         )}
 
-        {/* Gift CTA — only shown for paid orders */}
-        {isPaid && (
+        {/* Gift CTA — only shown for paid orders where gift hasn't been claimed yet */}
+        {isPaid && !hasClaimedGift && (
           <div className="bg-gradient-to-br from-yellow-400 to-amber-400 rounded-2xl shadow-md p-6 text-center mb-3">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-white/30 rounded-full mb-3">
               <Gift size={28} className="text-white" />
