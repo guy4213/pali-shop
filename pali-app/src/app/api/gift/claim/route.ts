@@ -26,6 +26,35 @@ export async function POST(req: NextRequest) {
     const data = parsed.data
     const supabase = await createServiceClient()
 
+    // Validate that the order exists and has been paid
+    if (!data.order_id) {
+      return NextResponse.json({ error: 'הזמנה לא תקפה' }, { status: 400 })
+    }
+
+    const { data: order } = await supabase
+      .from('orders')
+      .select('id, status')
+      .eq('id', data.order_id)
+      .maybeSingle()
+
+    if (!order || order.status !== 'paid') {
+      return NextResponse.json({ error: 'הזמנה לא תקפה' }, { status: 400 })
+    }
+
+    // Prevent double-claiming on the same order
+    const { data: existingOrderClaim } = await supabase
+      .from('gift_claims')
+      .select('id')
+      .eq('order_id', data.order_id)
+      .maybeSingle()
+
+    if (existingOrderClaim) {
+      return NextResponse.json(
+        { error: 'מתנה כבר נתבעה עבור הזמנה זו.' },
+        { status: 409 }
+      )
+    }
+
     // Anti-abuse: fast pre-check before doing expensive work.
     // The real guard is the UNIQUE constraint on gift_claims.phone —
     // if two concurrent requests slip past this check simultaneously,

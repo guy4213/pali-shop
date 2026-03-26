@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { CheckCircle2, Package, ArrowRight } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { CheckCircle2, Package, Gift, ArrowRight } from 'lucide-react'
+import { createServiceClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   params: Promise<{ order_id: string }>
@@ -9,7 +10,7 @@ interface Props {
 
 export default async function OrderConfirmationPage({ params }: Props) {
   const { order_id } = await params
-  const supabase = await createClient()
+  const supabase = await createServiceClient()
 
   const { data: order } = await supabase
     .from('orders')
@@ -18,6 +19,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
       buyer_name,
       buyer_email,
       amount,
+      status,
       referral_code,
       created_at,
       products (
@@ -46,10 +48,13 @@ export default async function OrderConfirmationPage({ params }: Props) {
     )
   }
 
-const productObj=Array.isArray(order.products) 
-    ? (order.products[0] ?? null) 
-    : order.products 
+  const productObj = Array.isArray(order.products)
+    ? (order.products[0] ?? null)
+    : order.products
   const productName = (productObj as { name: string } | null)?.name ?? 'מוצר'
+
+  const isPaid = order.status === 'paid'
+  const giftUrl = `/gift?order=${order.id}${order.referral_code ? `&ref=${order.referral_code}` : ''}`
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-gray-50 flex flex-col items-center justify-center px-4 py-12">
@@ -111,6 +116,25 @@ const productObj=Array.isArray(order.products)
             <p className="text-green-700 text-sm font-medium">
               הרכישה זוכתה לשגריר שלך 🎉
             </p>
+          </div>
+        )}
+
+        {/* Gift CTA — only shown for paid orders */}
+        {isPaid && (
+          <div className="bg-gradient-to-br from-yellow-400 to-amber-400 rounded-2xl shadow-md p-6 text-center mb-3">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-white/30 rounded-full mb-3">
+              <Gift size={28} className="text-white" />
+            </div>
+            <h2 className="text-xl font-black text-white mb-1">מגיעה לך מתנה חינם!</h2>
+            <p className="text-yellow-100 text-sm mb-5">
+              כתודה על הרכישה — בחר מתנה ונשלח אליך אותה חינם לבית.
+            </p>
+            <Link href={giftUrl}>
+              <Button className="bg-white text-yellow-700 hover:bg-yellow-50 font-bold px-8 py-5 text-base rounded-xl gap-2 shadow">
+                בחר מתנה
+                <ArrowRight size={16} className="rtl-flip" />
+              </Button>
+            </Link>
           </div>
         )}
 
