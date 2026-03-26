@@ -1,4 +1,7 @@
 import { Resend } from 'resend'
+import { Vonage } from '@vonage/server-sdk'
+
+// ─── Email ────────────────────────────────────────────────────────────────────
 
 function getResend() {
   const key = process.env.RESEND_API_KEY
@@ -69,4 +72,62 @@ export async function sendWelcomeEmail(email: string, referralUrl: string) {
   } catch (error) {
     console.error('Failed to send welcome email:', error)
   }
+}
+
+// ─── SMS ─────────────────────────────────────────────────────────────────────
+// Required env vars: VONAGE_API_KEY, VONAGE_API_SECRET
+
+function normalizeIsraeliPhone(phone: string): string {
+  const trimmed = phone.trim()
+  if (trimmed.startsWith('+972')) return trimmed
+  if (trimmed.startsWith('972')) return `+${trimmed}`
+  if (trimmed.startsWith('0')) return `+972${trimmed.slice(1)}`
+  return `+972${trimmed}`
+}
+
+export async function sendSMS(to: string, message: string): Promise<void> {
+  const apiKey = process.env.VONAGE_API_KEY
+  const apiSecret = process.env.VONAGE_API_SECRET
+
+  if (!apiKey || !apiSecret) {
+    console.warn('SMS skipped: VONAGE_API_KEY or VONAGE_API_SECRET is not set')
+    return
+  }
+
+  const normalizedTo = normalizeIsraeliPhone(to)
+
+  try {
+    const vonage = new Vonage({ apiKey, apiSecret })
+    await vonage.sms.send({ to: normalizedTo, from: 'PALI', text: message })
+    console.log(`SMS sent to ${normalizedTo}`)
+  } catch (error) {
+    console.error(`Failed to send SMS to ${normalizedTo}:`, error)
+  }
+}
+
+export async function sendOrderConfirmationSMS(
+  phone: string,
+  buyerName: string,
+  orderId: string
+): Promise<void> {
+  const message = `שלום ${buyerName}, הזמנתך #${orderId.slice(0, 8).toUpperCase()} התקבלה בהצלחה! נעדכן אותך כשתישלח.`
+  await sendSMS(phone, message)
+}
+
+export async function sendCommissionEarnedSMS(
+  phone: string,
+  referrerName: string,
+  points: number
+): Promise<void> {
+  const message = `היי ${referrerName}! צברת ${points} נקודות על רכישה דרך הקישור שלך 🎉`
+  await sendSMS(phone, message)
+}
+
+export async function sendShippingUpdateSMS(
+  phone: string,
+  buyerName: string,
+  trackingNumber: string
+): Promise<void> {
+  const message = `שלום ${buyerName}, הזמנתך נשלחה! מספר מעקב: ${trackingNumber}`
+  await sendSMS(phone, message)
 }
