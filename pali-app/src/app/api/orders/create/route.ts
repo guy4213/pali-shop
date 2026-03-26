@@ -69,8 +69,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create the order — status='pending', payment_status='unpaid'
-    // No commission, no wallet update here — that happens in the webhook after real payment
+    // TODO: set status='pending', payment_status='unpaid' once real payment webhook is wired up
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -82,8 +81,8 @@ export async function POST(req: NextRequest) {
         buyer_address:   data.buyer_address,
         amount:          product.price,
         points_redeemed: pointsToRedeem,
-        status:          'pending',
-        payment_status:  'unpaid',
+        status:          'paid',
+        payment_status:  'paid',
       })
       .select()
       .single()
@@ -113,7 +112,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ order_id: order.id, status: 'pending' })
+    return NextResponse.json({ order_id: order.id, status: 'paid' })
 
   } catch (err) {
     console.error('Create order error:', err)
