@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { updateTrackingNumber } from './actions'
+import { updateTrackingNumber, updateShippingStatus } from './actions'
+import type { ShippingStatus } from './actions'
 
 interface OrderRow {
   id: string
@@ -14,11 +15,11 @@ interface OrderRow {
   points_redeemed: number
   status: string
   payment_status: string
+  shipping_status: string
   tracking_number: string | null
   created_at: string
   products: { name: string } | null
 }
-
 
 interface Props {
   initialOrders: OrderRow[]
@@ -39,6 +40,16 @@ const paymentStatusConfig: Record<string, { label: string; color: string }> = {
   chargeback: { label: 'חיוב חוזר', color: 'bg-red-100 text-red-600' },
 }
 
+const SHIPPING_STATUS_OPTIONS: { value: ShippingStatus; label: string }[] = [
+  { value: 'received',   label: 'התקבלה הזמנה' },
+  { value: 'processing', label: 'בטיפול' },
+  { value: 'packed',     label: 'נארזה' },
+  { value: 'shipped',    label: 'נשלחה' },
+  { value: 'in_transit', label: 'בדרך' },
+  { value: 'delivered',  label: 'נמסרה' },
+  { value: 'exception',  label: 'חריגה / בעיה במשלוח' },
+]
+
 export default function OrdersTable({ initialOrders }: Props) {
   const [orders, setOrders] = useState(initialOrders)
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -56,6 +67,20 @@ export default function OrdersTable({ initialOrders }: Props) {
       toast({ title: 'מספר מעקב עודכן' })
     } else {
       toast({ title: 'שגיאה בשמירה', variant: 'destructive' })
+    }
+  }
+
+  async function handleShippingStatusChange(orderId: string, status: ShippingStatus) {
+    setSavingId(orderId)
+    const { success } = await updateShippingStatus(orderId, status)
+    setSavingId(null)
+    if (success) {
+      setOrders(prev =>
+        prev.map(o => o.id === orderId ? { ...o, shipping_status: status } : o)
+      )
+      toast({ title: 'סטטוס משלוח עודכן' })
+    } else {
+      toast({ title: 'שגיאה בעדכון סטטוס', variant: 'destructive' })
     }
   }
 
@@ -82,6 +107,7 @@ export default function OrdersTable({ initialOrders }: Props) {
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">נקודות</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">תשלום</th>
+                  <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס משלוח</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">תאריך</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">מס׳ מעקב</th>
                 </tr>
@@ -90,6 +116,7 @@ export default function OrdersTable({ initialOrders }: Props) {
                 {orders.map(order => {
                   const sc = statusConfig[order.status] ?? { label: order.status, color: 'bg-gray-100 text-gray-600' }
                   const pc = paymentStatusConfig[order.payment_status] ?? { label: order.payment_status, color: 'bg-gray-100 text-gray-600' }
+                  const isSaving = savingId === order.id
                   return (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="py-3 px-3 font-mono text-xs text-gray-500">
@@ -120,6 +147,20 @@ export default function OrdersTable({ initialOrders }: Props) {
                           {pc.label}
                         </Badge>
                       </td>
+                      <td className="py-3 px-3">
+                        <select
+                          value={order.shipping_status || 'received'}
+                          disabled={isSaving}
+                          onChange={e => handleShippingStatusChange(order.id, e.target.value as ShippingStatus)}
+                          className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 bg-white min-w-[130px]"
+                        >
+                          {SHIPPING_STATUS_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
                       <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
                         {new Date(order.created_at).toLocaleDateString('he-IL')}
                       </td>
@@ -127,7 +168,7 @@ export default function OrdersTable({ initialOrders }: Props) {
                         <input
                           type="text"
                           defaultValue={order.tracking_number ?? ''}
-                          disabled={savingId === order.id}
+                          disabled={isSaving}
                           placeholder="הוסף מספר מעקב"
                           className="w-36 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
                           onBlur={e => handleTrackingUpdate(order.id, e.target.value, order.tracking_number)}

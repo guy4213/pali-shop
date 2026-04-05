@@ -13,3 +13,24 @@ export async function updateTrackingNumber(
     .eq('id', orderId)
   return { success: !error }
 }
+
+export type ShippingStatus =
+  | 'received'
+  | 'processing'
+  | 'packed'
+  | 'shipped'
+  | 'in_transit'
+  | 'delivered'
+  | 'exception'
+
+export async function updateShippingStatus(
+  orderId: string,
+  status: ShippingStatus
+): Promise<{ success: boolean }> {
+  const supabase = await createServiceClient()
+  const { error } = await supabase
+    .from('orders')
+    .update({ shipping_status: status })
+    .eq('id', orderId)
+  return { success: !error }
+}
