@@ -13,3 +13,15 @@ export async function updateTrackingNumber(
     .eq('id', orderId)
   return { success: !error }
 }
+
+export async function updateShippingStatus(
+  orderId: string,
+  shippingStatus: string
+): Promise<{ success: boolean }> {
+  const supabase = await createServiceClient()
+  const { error } = await supabase
+    .from('orders')
+    .update({ shipping_status: shippingStatus })
+    .eq('id', orderId)
+  return { success: !error }
+}

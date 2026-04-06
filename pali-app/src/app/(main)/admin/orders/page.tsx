@@ -20,6 +20,7 @@ export default async function AdminOrdersPage() {
       points_redeemed,
       status,
       payment_status,
+      shipping_status,
       tracking_number,
       created_at,
       products (
