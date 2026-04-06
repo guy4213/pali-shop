@@ -25,18 +25,20 @@ interface Props {
   initialOrders: OrderRow[]
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  pending:   { label: 'ממתין',  color: 'bg-gray-100 text-gray-600' },
-  paid:      { label: 'שולם',   color: 'bg-green-100 text-green-700' },
-  shipped:   { label: 'נשלח',   color: 'bg-blue-100 text-blue-700' },
-  cancelled: { label: 'בוטל',   color: 'bg-red-100 text-red-600' },
-  delivered: { label: 'נמסר',   color: 'bg-green-100 text-green-700' },
-}
+const SHIPPING_STATUSES: { value: string; label: string }[] = [
+  { value: 'received',   label: 'התקבלה' },
+  { value: 'processing', label: 'בעיבוד' },
+  { value: 'packed',     label: 'נארזה' },
+  { value: 'shipped',    label: 'נשלחה' },
+  { value: 'in_transit', label: 'בדרך' },
+  { value: 'delivered',  label: 'נמסרה' },
+  { value: 'exception',  label: 'תקלה' },
+]
 
 const paymentStatusConfig: Record<string, { label: string; color: string }> = {
-  unpaid:     { label: 'לא שולם',  color: 'bg-yellow-100 text-yellow-700' },
-  paid:       { label: 'שולם',     color: 'bg-green-100 text-green-700' },
-  refunded:   { label: 'הוחזר',    color: 'bg-purple-100 text-purple-700' },
+  unpaid:     { label: 'לא שולם',   color: 'bg-yellow-100 text-yellow-700' },
+  paid:       { label: 'שולם',      color: 'bg-green-100 text-green-700' },
+  refunded:   { label: 'הוחזר',     color: 'bg-purple-100 text-purple-700' },
   chargeback: { label: 'חיוב חוזר', color: 'bg-red-100 text-red-600' },
 }
 
@@ -105,7 +107,7 @@ export default function OrdersTable({ initialOrders }: Props) {
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">מוצר</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סכום (₪)</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">נקודות</th>
-                  <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס</th>
+                  <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס משלוח</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">תשלום</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס משלוח</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">תאריך</th>
@@ -114,7 +116,6 @@ export default function OrdersTable({ initialOrders }: Props) {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {orders.map(order => {
-                  const sc = statusConfig[order.status] ?? { label: order.status, color: 'bg-gray-100 text-gray-600' }
                   const pc = paymentStatusConfig[order.payment_status] ?? { label: order.payment_status, color: 'bg-gray-100 text-gray-600' }
                   const isSaving = savingId === order.id
                   return (
@@ -138,9 +139,16 @@ export default function OrdersTable({ initialOrders }: Props) {
                         {order.points_redeemed > 0 ? order.points_redeemed.toLocaleString() : '—'}
                       </td>
                       <td className="py-3 px-3">
-                        <Badge className={`${sc.color} hover:${sc.color} border-0`}>
-                          {sc.label}
-                        </Badge>
+                        <select
+                          value={order.shipping_status ?? 'received'}
+                          disabled={savingId === order.id}
+                          onChange={e => handleShippingStatusChange(order.id, e.target.value)}
+                          className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 bg-white"
+                        >
+                          {SHIPPING_STATUSES.map(s => (
+                            <option key={s.value} value={s.value}>{s.label}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="py-3 px-3">
                         <Badge className={`${pc.color} hover:${pc.color} border-0`}>
@@ -173,9 +181,7 @@ export default function OrdersTable({ initialOrders }: Props) {
                           className="w-36 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:opacity-50"
                           onBlur={e => handleTrackingUpdate(order.id, e.target.value, order.tracking_number)}
                           onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.currentTarget.blur()
-                            }
+                            if (e.key === 'Enter') e.currentTarget.blur()
                           }}
                         />
                       </td>

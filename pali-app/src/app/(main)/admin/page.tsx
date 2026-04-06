@@ -4,15 +4,12 @@ import Link from 'next/link'
 import { Package, Users, ArrowDownToLine, Gift } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import AdminProductsTable from './AdminProductsTable'
+import { isAdmin } from '@/lib/auth'
+
 export default async function AdminPage() {
+  if (!await isAdmin()) redirect('/')
+
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) redirect('/auth/login')
-
-  // For now, check by email pattern — in production use custom claims
-  const isAdmin = user.email?.endsWith('@pali.co.il') || user.app_metadata?.role === 'admin'
-  if (!isAdmin) redirect('/')
 
   const [products, referrers, pendingWithdrawals, giftClaims] = await Promise.all([
     supabase.from('products').select('*').order('created_at'),

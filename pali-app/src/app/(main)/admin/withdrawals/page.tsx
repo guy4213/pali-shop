@@ -3,14 +3,12 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import WithdrawalsTable from './WithdrawalsTable'
+import { isAdmin } from '@/lib/auth'
 
 export default async function WithdrawalsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  if (!await isAdmin()) redirect('/')
 
-  if (!user) redirect('/auth/login')
-  const isAdmin = user.email?.endsWith('@pali.co.il') || user.app_metadata?.role === 'admin'
-  if (!isAdmin) redirect('/')
+  const supabase = await createClient()
 
   const { data: requests } = await supabase
     .from('withdrawal_requests')
