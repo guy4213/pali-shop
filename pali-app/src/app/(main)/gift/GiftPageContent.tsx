@@ -37,6 +37,17 @@ function GiftPageContent() {
     e.preventDefault()
     if (!selectedGift) return
 
+    const selectedItem = giftItems.find(i => i.id === selectedGift)
+    if (!selectedItem || selectedItem.stock_count === 0) {
+      toast({
+        title: 'שגיאה',
+        description: 'המתנה שבחרת אזלה מהמלאי. אנא בחר מתנה אחרת.',
+        variant: 'destructive',
+      })
+      setStep('select')
+      return
+    }
+
     setStep('loading')
 
     try {
@@ -95,41 +106,54 @@ function GiftPageContent() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {giftItems.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => { setSelectedGift(item.id); setStep('form') }}
-                    className={`relative border-2 rounded-xl p-4 text-center transition-all ${
-                      selectedGift === item.id
-                        ? 'border-yellow-500 bg-yellow-50 shadow-md'
-                        : 'border-gray-200 hover:border-yellow-300 hover:bg-yellow-50'
-                    }`}
-                  >
-                    {selectedGift === item.id && (
-                      <div className="absolute top-2 left-2">
-                        <CheckCircle size={20} className="text-yellow-500" />
-                      </div>
-                    )}
-                    <div className="relative w-full h-32 mb-3 rounded-lg overflow-hidden bg-gray-100">
-                      {item.image_url ? (
-                        <Image
-                          src={item.image_url}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          onError={(e) => {
-                            const t = e.target as HTMLImageElement
-                            t.style.display = 'none'
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>
+                {giftItems.map(item => {
+                  const outOfStock = item.stock_count === 0
+                  return (
+                    <button
+                      key={item.id}
+                      disabled={outOfStock}
+                      onClick={outOfStock ? undefined : () => { setSelectedGift(item.id); setStep('form') }}
+                      className={`relative border-2 rounded-xl p-4 text-center transition-all ${
+                        outOfStock
+                          ? 'border-gray-200 opacity-60 cursor-not-allowed'
+                          : selectedGift === item.id
+                            ? 'border-yellow-500 bg-yellow-50 shadow-md'
+                            : 'border-gray-200 hover:border-yellow-300 hover:bg-yellow-50'
+                      }`}
+                    >
+                      {!outOfStock && selectedGift === item.id && (
+                        <div className="absolute top-2 left-2">
+                          <CheckCircle size={20} className="text-yellow-500" />
+                        </div>
                       )}
-                    </div>
-                    <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
-                    <p className="text-xs text-green-600 font-medium mt-1">חינם!</p>
-                  </button>
-                ))}
+                      <div className="relative w-full h-32 mb-3 rounded-lg overflow-hidden bg-gray-100">
+                        {item.image_url ? (
+                          <Image
+                            src={item.image_url}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                            onError={(e) => {
+                              const t = e.target as HTMLImageElement
+                              t.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>
+                        )}
+                        {outOfStock && (
+                          <div className="absolute top-2 right-2">
+                            <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">
+                              אזל המלאי
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
+                      <p className="text-xs text-green-600 font-medium mt-1">חינם!</p>
+                    </button>
+                  )
+                })}
               </div>
             )}
           </div>

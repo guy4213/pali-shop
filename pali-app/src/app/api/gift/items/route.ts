@@ -7,7 +7,6 @@ export async function GET() {
   const { data: items, error } = await supabase
     .from('gift_items')
     .select('*')
-    .gt('stock_count', 0)
     .order('name')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
