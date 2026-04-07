@@ -71,6 +71,11 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
           <p>© {new Date().getFullYear()} PALI. כל הזכויות שמורות.</p>
+          <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-400">
+            <Link href="/terms" className="hover:text-gray-300 transition-colors">תנאי שימוש</Link>
+            <span className="text-gray-600">|</span>
+            <Link href="/terms" className="hover:text-gray-300 transition-colors">מדיניות פרטיות</Link>
+          </div>
         </div>
       </div>
     </footer>
