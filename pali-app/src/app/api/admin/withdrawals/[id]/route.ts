@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { isAdmin } from '@/lib/auth'
+import { isSuperAdmin } from '@/lib/auth'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  if (!await isSuperAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
   const { id } = await params
   const { status, admin_note } = await req.json()

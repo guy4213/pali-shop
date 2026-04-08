@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import WithdrawalsTable from './WithdrawalsTable'
-import { isAdmin } from '@/lib/auth'
+import { isAdmin, isSuperAdmin } from '@/lib/auth'
 
 export default async function WithdrawalsPage() {
   if (!await isAdmin()) redirect('/')
 
+  const canApprove = await isSuperAdmin()
   const supabase = await createClient()
 
   const { data: requests } = await supabase
@@ -29,7 +30,7 @@ export default async function WithdrawalsPage() {
           חזרה לניהול
         </Link>
         <h1 className="text-2xl font-black text-gray-900 mb-6">בקשות משיכה</h1>
-        <WithdrawalsTable initialRequests={requests || []} />
+        <WithdrawalsTable initialRequests={requests || []} canApprove={canApprove} />
       </div>
     </div>
   )
