@@ -20,6 +20,7 @@ interface WithdrawalRow {
 
 interface Props {
   initialRequests: WithdrawalRow[]
+  canApprove: boolean
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -28,7 +29,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   rejected: { label: 'נדחה', color: 'bg-red-100 text-red-700' },
 }
 
-export default function WithdrawalsTable({ initialRequests }: Props) {
+export default function WithdrawalsTable({ initialRequests, canApprove }: Props) {
   const [requests, setRequests] = useState(initialRequests)
   const { toast } = useToast()
 
@@ -93,7 +94,7 @@ export default function WithdrawalsTable({ initialRequests }: Props) {
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      {req.status === 'pending' && (
+                      {req.status === 'pending' && canApprove && (
                         <div className="flex gap-2">
                           <button
                             onClick={() => updateStatus(req.id, 'approved')}
