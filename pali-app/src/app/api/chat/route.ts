@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   const data = await res.json()
   const reply = data.choices?.[0]?.message?.content ?? 'מצטערים, אירעה שגיאה. נסה שוב.'
-  const escalate = ['תלונה', 'ביטול', 'החזר', 'בעיית תשלום', 'בעיית משלוח', 'נציג', 'ESCALATE'].some(k => reply.includes(k))
+  const escalate = reply.includes('ESCALATE')
 
   return NextResponse.json({ reply, escalate })
 }
