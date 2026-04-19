@@ -8,17 +8,17 @@ export async function POST(req: NextRequest) {
   const { messages } = await req.json()
 
   const supabase = await createClient()
-  const { data: product } = await supabase
+  const { data: products } = await supabase
     .from('products')
     .select('name,price,description')
     .eq('is_visible', true)
-    .limit(1)
-    .single()
+    .order('created_at')
 
   const systemPrompt = `
 אתה נציג שירות לקוחות של חנות PALI. ענה תמיד בעברית בלבד.
 אתה עוזר ללקוחות עם שאלות על:
-- המוצר: ${product?.name || 'המוצר שלנו'}, מחיר: ₪${product?.price || ''}
+- המוצרים הזמינים בחנות:
+  ${products?.map(p => `• ${p.name} — ₪${p.price}${p.description ? ` — ${p.description}` : ''}`).join('\n  ') || 'המוצרים שלנו'}
 - זמני משלוח: עד 3 ימי עסקים, הלקוח משלם דמי משלוח
 - החזרות: בהתאם לחוק הגנת הצרכן הישראלי
 - סטטוס הזמנה: הפנה את הלקוח לעמוד /track עם מספר ההזמנה והטלפון/מייל
