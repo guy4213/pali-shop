@@ -17,7 +17,7 @@ export default async function DashboardPage() {
 
   if (!referrer) redirect('/gift')
 
-  const [balance, clicksData, commissionsData] = await Promise.all([
+  const [balance, clicksData, commissionsData, earningsData] = await Promise.all([
     getBalance(referrer.id),
     supabase
       .from('referral_clicks')
@@ -29,12 +29,17 @@ export default async function DashboardPage() {
       .select('points_earned, created_at')
       .eq('referrer_id', referrer.id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('wallet_transactions')
+      .select('points, created_at')
+      .eq('referrer_id', referrer.id)
+      .eq('type', 'earn'),
   ])
 
   const stats = {
     total_clicks: clicksData.data?.length || 0,
     total_purchases: commissionsData.data?.length || 0,
-    total_earned: commissionsData.data?.reduce((s, c) => s + c.points_earned, 0) || 0,
+    total_earned: earningsData.data?.reduce((s, t) => s + Number(t.points), 0) || 0,
     balance,
     can_withdraw: balance >= WITHDRAWAL_THRESHOLD,
   }
