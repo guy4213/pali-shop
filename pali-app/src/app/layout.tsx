@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
-import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp'
+import ChatWidget from '@/components/chat/ChatWidget'
 import { CartProvider } from '@/components/providers/CartProvider'
 import { UserProvider } from '@/components/providers/UserProvider'
 
@@ -28,7 +28,7 @@ export default function RootLayout({
         </CartProvider>
         </UserProvider>
         <Toaster />
-        <FloatingWhatsApp />
+        <ChatWidget />
       </body>
     </html>
   )
