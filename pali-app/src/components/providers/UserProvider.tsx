@@ -25,13 +25,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       setUserEmail(user.email ?? null)
-      setIsAdmin(user.app_metadata?.role === 'admin')
+      setIsAdmin(user.app_metadata?.role === 'admin' || user.app_metadata?.role === 'super_admin')
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null
+      setUserEmail(user?.email ?? null)
+      setIsAdmin(
+        user?.app_metadata?.role === 'admin' || user?.app_metadata?.role === 'super_admin'
+      )
     })
 
     fetch('/api/wallet/balance')
       .then(r => r.json())
       .then(data => setBalance(data.balance ?? 0))
       .catch(() => {})
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return (

@@ -11,20 +11,26 @@ export default async function AdminPage() {
 
   const supabase = await createClient()
 
-  const [products, referrers, pendingWithdrawals, giftClaims, openTickets] = await Promise.all([
+  const [products, referrers, pendingWithdrawals, giftClaims] = await Promise.all([
     supabase.from('products').select('*').order('created_at'),
     supabase.from('referrers').select('id').eq('is_active', true),
     supabase.from('withdrawal_requests').select('id').eq('status', 'pending'),
     supabase.from('gift_claims').select('id'),
-    supabase.from('support_tickets').select('id').eq('status', 'open'),
   ])
+
+  // Queried separately — table may not exist before migration 006 runs
+  const { data: openTicketsData } = await supabase
+    .from('support_tickets')
+    .select('id')
+    .eq('status', 'open')
+  const openTicketsCount = openTicketsData?.length ?? 0
 
   const stats = [
     { label: 'מוצרים', value: products.data?.length || 0, icon: Package, href: '#products' },
     { label: 'ממליצים פעילים', value: referrers.data?.length || 0, icon: Users, href: '/admin/referrers' },
     { label: 'משיכות ממתינות', value: pendingWithdrawals.data?.length || 0, icon: ArrowDownToLine, href: '/admin/withdrawals' },
     { label: 'תביעות מתנות', value: giftClaims.data?.length || 0, icon: Gift, href: '#gifts' },
-    { label: 'פניות שירות', value: openTickets.data?.length || 0, icon: MessageCircle, href: '/admin/support' },
+    { label: 'פניות שירות', value: openTicketsCount, icon: MessageCircle, href: '/admin/support' },
   ]
 
   return (
