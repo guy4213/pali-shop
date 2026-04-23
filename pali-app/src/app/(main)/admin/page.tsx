@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Package, Users, ArrowDownToLine, Gift } from 'lucide-react'
+import { Package, Users, ArrowDownToLine, Gift, MessageCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import AdminProductsTable from './AdminProductsTable'
 import { isAdmin } from '@/lib/auth'
@@ -11,11 +11,12 @@ export default async function AdminPage() {
 
   const supabase = await createClient()
 
-  const [products, referrers, pendingWithdrawals, giftClaims] = await Promise.all([
+  const [products, referrers, pendingWithdrawals, giftClaims, openTickets] = await Promise.all([
     supabase.from('products').select('*').order('created_at'),
     supabase.from('referrers').select('id').eq('is_active', true),
     supabase.from('withdrawal_requests').select('id').eq('status', 'pending'),
     supabase.from('gift_claims').select('id'),
+    supabase.from('support_tickets').select('id').eq('status', 'open'),
   ])
 
   const stats = [
@@ -23,6 +24,7 @@ export default async function AdminPage() {
     { label: 'ממליצים פעילים', value: referrers.data?.length || 0, icon: Users, href: '/admin/referrers' },
     { label: 'משיכות ממתינות', value: pendingWithdrawals.data?.length || 0, icon: ArrowDownToLine, href: '/admin/withdrawals' },
     { label: 'תביעות מתנות', value: giftClaims.data?.length || 0, icon: Gift, href: '#gifts' },
+    { label: 'פניות שירות', value: openTickets.data?.length || 0, icon: MessageCircle, href: '/admin/support' },
   ]
 
   return (

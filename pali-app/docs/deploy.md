@@ -93,3 +93,35 @@ vercel --prod
 3. **הרשאות אדמין** — כנס עם משתמש האדמין וודא גישה לפאנל הניהול
 4. **תשלום** — בצע הזמנת מבחן וודא שה-redirect ל-Success/Cancel עובד
 5. **שליחת מייל/SMS** — בצע פעולה שמפעילה התראה וודא שהמסר מגיע
+
+---
+
+## Customer Support Chatbot
+
+### Required environment variables
+
+| Variable | Description |
+|---|---|
+| `OPENAI_API_KEY` | API key for OpenAI — powers the `gpt-4o-mini` chat assistant |
+| `NEXT_PUBLIC_WHATSAPP_BUSINESS_NUMBER` | WhatsApp Business number in E.164 format **without** the `+` (e.g. `972501234567`). If unset, the escalation confirmation shows "נציג יחזור אליך בהקדם" instead of a WhatsApp CTA button |
+| `ADMIN_EMAIL` | Email address that receives a notification email for every new support ticket (via Resend) |
+| `ADMIN_PHONE` | Israeli mobile number that receives an SMS for every new support ticket (via Vonage) |
+
+### Swapping the WhatsApp number at launch
+
+Update `NEXT_PUBLIC_WHATSAPP_BUSINESS_NUMBER` in your Vercel environment variables and trigger a redeployment. No code change required.
+
+### Where tickets are stored and viewed
+
+- **Database:** `support_tickets` table (created by migration `006_support_tickets.sql`)
+- **Admin UI:** `/admin/support` — shows open/handled tickets, allows marking tickets as handled
+- The admin dashboard card at `/admin` shows the count of currently open tickets
+
+### What triggers admin notifications
+
+Every successful ticket insert fires both an email (via Resend) and an SMS (via Vonage) to the admin. These are fire-and-forget: a notification failure does **not** block ticket creation and does **not** return an error to the customer.
+
+If the admin stops receiving notifications, check:
+1. **Email:** Resend dashboard → check send logs and domain verification
+2. **SMS:** Vonage dashboard → check balance and message logs
+3. **Environment:** confirm `ADMIN_EMAIL`, `ADMIN_PHONE`, `RESEND_API_KEY`, `VONAGE_API_KEY`, `VONAGE_API_SECRET` are all set in Vercel
