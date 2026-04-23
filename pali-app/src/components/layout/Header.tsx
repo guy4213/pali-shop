@@ -5,7 +5,6 @@ import { useState } from 'react'
 import {
   Package,
   HelpCircle,
-  MessageCircle,
   Search,
   User,
   ShoppingCart,
@@ -64,15 +63,6 @@ export default function Header() {
               <span>שאלות ותשובות</span>
             </Link>
           </div>
-          <a
-            href="https://wa.me/972500000000"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 hover:text-green-400 transition-colors"
-          >
-            <MessageCircle size={14} />
-            <span>צ&apos;אט עם נציג</span>
-          </a>
         </div>
       </div>
 
