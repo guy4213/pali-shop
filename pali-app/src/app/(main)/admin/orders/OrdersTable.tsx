@@ -107,7 +107,6 @@ export default function OrdersTable({ initialOrders }: Props) {
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">מוצר</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סכום (₪)</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">נקודות</th>
-                  <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס משלוח</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">תשלום</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">סטטוס משלוח</th>
                   <th className="text-right py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">תאריך</th>
@@ -137,18 +136,6 @@ export default function OrdersTable({ initialOrders }: Props) {
                       </td>
                       <td className="py-3 px-3 text-yellow-700 font-medium">
                         {order.points_redeemed > 0 ? order.points_redeemed.toLocaleString() : '—'}
-                      </td>
-                      <td className="py-3 px-3">
-                        <select
-                          value={order.shipping_status ?? 'received'}
-                          disabled={savingId === order.id}
-                          onChange={e => handleShippingStatusChange(order.id, e.target.value)}
-                          className="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-yellow-400 disabled:opacity-50 bg-white"
-                        >
-                          {SHIPPING_STATUSES.map(s => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
-                          ))}
-                        </select>
                       </td>
                       <td className="py-3 px-3">
                         <Badge className={`${pc.color} hover:${pc.color} border-0`}>

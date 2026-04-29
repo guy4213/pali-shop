@@ -23,9 +23,11 @@ export default function ChatWidget() {
   // Escalation form
   const [formName, setFormName] = useState('')
   const [formPhone, setFormPhone] = useState('')
+  const [formEmail, setFormEmail] = useState('')
   const [formSummary, setFormSummary] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const submittedPhoneRef = useRef<string | null>(null)
 
   // Post-submit
   const [ticketId, setTicketId] = useState<string | null>(null)
@@ -110,6 +112,7 @@ export default function ChatWidget() {
       setFormError('מספר טלפון לא תקין (לדוגמה 0501234567)')
       return
     }
+    if (submittedPhoneRef.current === phone) return
     if (summary.length < 5 || summary.length > 500) {
       setFormError('נא לתאר את הבעיה בקצרה')
       return
@@ -123,7 +126,7 @@ export default function ChatWidget() {
         body: JSON.stringify({
           buyer_name: name,
           buyer_phone: phone,
-          buyer_email: undefined,
+          buyer_email: formEmail.trim() || undefined,
           issue_summary: summary,
           chat_history: messages,
         }),
@@ -135,6 +138,7 @@ export default function ChatWidget() {
         setFormError(data.error || 'שגיאה, נסה שוב')
       } else {
         setTicketId(data.ticket_id)
+        submittedPhoneRef.current = phone
         setPhase('escalation_sent')
       }
     } catch {
@@ -258,6 +262,21 @@ export default function ChatWidget() {
                   placeholder="050-0000000"
                   value={formPhone}
                   onChange={e => setFormPhone(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label htmlFor="esc-email" className="text-sm text-gray-700">אימייל (אופציונלי)</label>
+                <input
+                  id="esc-email"
+                  type="email"
+                  dir="ltr"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="name@example.com"
+                  value={formEmail}
+                  onChange={e => setFormEmail(e.target.value)}
                   className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
               </div>

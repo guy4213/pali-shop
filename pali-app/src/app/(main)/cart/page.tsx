@@ -29,25 +29,27 @@ async function handleCheckout(e: React.FormEvent) {
 
   try {
     for (const item of items) {
-      const res = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id:   item.product_id,
-          buyer_name:   form.name,
-          buyer_email:  form.email,
-          buyer_phone:  form.phone,
-          buyer_address: form.address,
-        }),
-      })
+      for (let q = 0; q < item.quantity; q++) {
+        const res = await fetch('/api/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id:   item.product_id,
+            buyer_name:   form.name,
+            buyer_email:  form.email,
+            buyer_phone:  form.phone,
+            buyer_address: form.address,
+          }),
+        })
 
-      const data = await res.json()
+        const data = await res.json()
 
-      if (!res.ok) {
-        throw new Error(data.error || 'שגיאה ביצירת הזמנה')
+        if (!res.ok) {
+          throw new Error(data.error || 'שגיאה ביצירת הזמנה')
+        }
+
+        lastOrderId = data.order_id
       }
-
-      lastOrderId = data.order_id
     }
 
     clearCart()

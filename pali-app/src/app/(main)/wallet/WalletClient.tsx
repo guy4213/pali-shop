@@ -21,9 +21,9 @@ interface Props {
 }
 
 const typeLabels: Record<string, { label: string; color: string; icon: typeof TrendingUp }> = {
-  earn: { label: 'הכנסה', color: 'text-green-600 bg-green-50', icon: TrendingUp },
-  redeem: { label: 'מימוש', color: 'text-blue-600 bg-blue-50', icon: ShoppingBag },
-  withdraw: { label: 'משיכה', color: 'text-orange-600 bg-orange-50', icon: ArrowDownToLine },
+  earn:     { label: 'הכנסה', color: 'text-green-600 bg-green-50',   icon: TrendingUp },
+  redeem:   { label: 'מימוש', color: 'text-orange-600 bg-orange-50', icon: ShoppingBag },
+  withdraw: { label: 'משיכה', color: 'text-red-600 bg-red-50',       icon: ArrowDownToLine },
 }
 
 const statusLabels: Record<string, { label: string; color: string }> = {

@@ -1,6 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendShippingUpdateSMS } from '@/lib/notifications'
 
 export async function updateTrackingNumber(
   orderId: string,
@@ -28,9 +29,16 @@ export async function updateShippingStatus(
   status: ShippingStatus
 ): Promise<{ success: boolean }> {
   const supabase = await createServiceClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('orders')
     .update({ shipping_status: status })
     .eq('id', orderId)
+    .select('buyer_name, buyer_phone, tracking_number')
+    .single()
+
+  if (!error && status === 'shipped' && data?.tracking_number) {
+    sendShippingUpdateSMS(data.buyer_phone, data.buyer_name, data.tracking_number).catch(() => {})
+  }
+
   return { success: !error }
 }

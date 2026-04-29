@@ -15,7 +15,7 @@ export default async function AdminPage() {
     supabase.from('products').select('*').order('created_at'),
     supabase.from('referrers').select('id').eq('is_active', true),
     supabase.from('withdrawal_requests').select('id').eq('status', 'pending'),
-    supabase.from('gift_claims').select('id'),
+    supabase.from('gift_claims').select('id, name, email, phone, address, claimed_at, gift_items(name)').order('claimed_at', { ascending: false }).limit(50),
   ])
 
   // Queried separately — table may not exist before migration 006 runs
@@ -62,6 +62,58 @@ export default async function AdminPage() {
         {/* Products Management */}
         <div id="products">
           <AdminProductsTable initialProducts={products.data || []} />
+        </div>
+
+        {/* Gift Claims */}
+        <div id="gifts" className="mt-10">
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Gift size={20} className="text-yellow-600" />
+            תביעות מתנות
+          </h2>
+          <Card className="shadow-sm">
+            <CardContent className="p-0">
+              {!giftClaims.data || giftClaims.data.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">אין תביעות מתנות</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">שם</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">אימייל</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">טלפון</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">מתנה</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">כתובת</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-600">תאריך</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {giftClaims.data.map((claim: {
+                        id: string
+                        name: string
+                        email: string
+                        phone: string
+                        address: string
+                        claimed_at: string
+                        gift_items: { name: string } | null
+                      }) => (
+                        <tr key={claim.id} className="hover:bg-gray-50">
+                          <td className="py-3 px-4 text-gray-800">{claim.name}</td>
+                          <td className="py-3 px-4 text-gray-500 text-xs" dir="ltr">{claim.email}</td>
+                          <td className="py-3 px-4 text-gray-600" dir="ltr">{claim.phone}</td>
+                          <td className="py-3 px-4 text-gray-700">{claim.gift_items?.name ?? '—'}</td>
+                          <td className="py-3 px-4 text-gray-500 text-xs">{claim.address}</td>
+                          <td className="py-3 px-4 text-gray-400 whitespace-nowrap">
+                            {new Date(claim.claimed_at).toLocaleDateString('he-IL')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>

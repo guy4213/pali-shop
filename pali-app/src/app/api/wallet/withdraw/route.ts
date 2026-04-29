@@ -5,9 +5,9 @@ import { z } from 'zod'
 
 const withdrawSchema = z.object({
   points_amount: z.number().min(WITHDRAWAL_THRESHOLD),
-  bank_code:     z.string().min(2).max(3),   // Israeli bank code (e.g. '10', '12')
-  bank_branch:   z.string().min(3).max(5),   // branch number
-  bank_account:  z.string().min(4),          // account number
+  bank_code:    z.string().regex(/^\d{2,3}$/, 'מספר בנק חייב להיות 2-3 ספרות'),
+  bank_branch:  z.string().regex(/^\d{3,6}$/, 'מספר סניף חייב להיות 3-6 ספרות'),
+  bank_account: z.string().regex(/^\d{4,}$/,  'מספר חשבון חייב להיות לפחות 4 ספרות'),
 })
 
 export async function POST(req: NextRequest) {

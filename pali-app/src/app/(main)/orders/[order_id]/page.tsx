@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CheckCircle2, Package, Gift, ArrowRight } from 'lucide-react'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isAdmin } from '@/lib/auth'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -36,6 +37,26 @@ export default async function OrderConfirmationPage({ params }: Props) {
     .maybeSingle()
 
   const hasClaimedGift = !!existingClaim
+
+  const authClient = await createClient()
+  const { data: { user } } = await authClient.auth.getUser()
+  const admin = await isAdmin()
+
+  if (order && !admin && user?.email !== order.buyer_email) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 text-center">
+        <Package size={56} className="text-gray-300 mb-4" />
+        <h1 className="text-xl font-bold text-gray-700 mb-2">ההזמנה לא נמצאה</h1>
+        <p className="text-gray-400 text-sm mb-6">
+          ייתכן שהקישור שגוי או שההזמנה לא קיימת במערכת.
+        </p>
+        <Link href="/" className="inline-flex items-center gap-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium">
+          <ArrowRight size={16} className="rtl-flip" />
+          חזרה לדף הבית
+        </Link>
+      </div>
+    )
+  }
 
   if (!order) {
     return (

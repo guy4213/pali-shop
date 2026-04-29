@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+
 import { ArrowRight, ShoppingBag, Package } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
@@ -54,7 +55,8 @@ export default async function OrdersPage() {
             {typedOrders.map(order => {
               const status = statusMap[order.status] ?? { label: order.status, variant: 'outline' as const }
               return (
-                <Card key={order.id} className="shadow-sm">
+                <Link key={order.id} href={`/orders/${order.id}`} className="block">
+              <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                   <CardContent className="flex items-center gap-4 py-4">
                     {order.products?.image_url ? (
                       <img
@@ -83,6 +85,7 @@ export default async function OrdersPage() {
                     </div>
                   </CardContent>
                 </Card>
+                </Link>
               )
             })}
           </div>

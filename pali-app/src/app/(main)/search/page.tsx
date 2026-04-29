@@ -56,7 +56,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {products.map(product => (
               <Link
                 key={product.id}
-                href={`/share/${product.slug}`}
+                href={`/`}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
               >
                 {product.image_url ? (

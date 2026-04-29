@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { getBalance, redeemPoints } from '@/lib/points'
+import { getBalance, redeemPoints, addPoints } from '@/lib/points'
+import { sendOrderConfirmationSMS, sendCommissionEarnedSMS, sendSaleNotification } from '@/lib/notifications'
 import { z } from 'zod'
 
 const orderSchema = z.object({
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     // Look up product price
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('id, price')
+      .select('id, price, commission_amount')
       .eq('id', data.product_id)
       .single()
 
@@ -111,6 +112,39 @@ export async function POST(req: NextRequest) {
         }
       }
     }
+
+    // Award commission to referrer (K1)
+    if (data.referral_code && product.commission_amount > 0) {
+      const { data: referrer } = await supabase
+        .from('referrers')
+        .select('id, user_id, referral_code, phone')
+        .eq('referral_code', data.referral_code)
+        .single()
+
+      if (referrer) {
+        await addPoints(referrer.id, product.commission_amount, 'עמלה על מכירה דרך קישור')
+
+        await supabase.from('commissions').insert({
+          referrer_id: referrer.id,
+          order_id: order.id,
+          points_earned: product.commission_amount,
+        })
+
+        // Commission SMS + sale email to referrer (K7)
+        if (referrer.phone) {
+          sendCommissionEarnedSMS(referrer.phone, referrer.referral_code, product.commission_amount).catch(() => {})
+        }
+        if (referrer.user_id) {
+          const { data: authUser } = await supabase.auth.admin.getUserById(referrer.user_id)
+          if (authUser?.user?.email) {
+            sendSaleNotification(authUser.user.email, product.commission_amount).catch(() => {})
+          }
+        }
+      }
+    }
+
+    // Order confirmation SMS to buyer (K7)
+    sendOrderConfirmationSMS(data.buyer_phone, data.buyer_name, order.id).catch(() => {})
 
     return NextResponse.json({ order_id: order.id, status: 'paid' })
 

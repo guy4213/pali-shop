@@ -48,7 +48,7 @@ export default function ProductPage({ product, referralCode }: ProductPageProps)
       .catch(() => {})
   }, [orderOpen])
 
-  const maxPoints = Math.min(userBalance, Math.floor(product.price) - 1)
+  const maxPoints = Math.min(userBalance, Math.floor(product.price))
   const finalPrice = product.price - pointsUsed
 
   function handleAddToCart() {

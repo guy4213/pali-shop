@@ -34,10 +34,17 @@ export default function WithdrawalsTable({ initialRequests, canApprove }: Props)
   const { toast } = useToast()
 
   async function updateStatus(id: string, status: 'approved' | 'rejected') {
+    let admin_note: string | undefined
+    if (status === 'rejected') {
+      const reason = window.prompt('סיבת הדחייה (אופציונלי):')
+      if (reason === null) return
+      admin_note = reason.trim() || undefined
+    }
+
     const res = await fetch(`/api/admin/withdrawals/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, admin_note }),
     })
 
     if (res.ok) {

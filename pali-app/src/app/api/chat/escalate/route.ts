@@ -101,11 +101,24 @@ export async function POST(req: NextRequest) {
     // unauthenticated — allowed
   }
 
-  // ── Insert ticket ───────────────────────────────────────────────────────────
+  // ── Insert ticket (with server-side dedup within 5 minutes) ────────────────
   let ticketId: string
   let createdAt: string
   try {
     const service = await createServiceClient()
+
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const { data: existing } = await service
+      .from('support_tickets')
+      .select('id, created_at')
+      .eq('buyer_phone', normalizedPhone)
+      .gte('created_at', fiveMinutesAgo)
+      .maybeSingle()
+
+    if (existing) {
+      return NextResponse.json({ ok: true, ticket_id: existing.id }, { status: 200 })
+    }
+
     const { data, error } = await service
       .from('support_tickets')
       .insert({
