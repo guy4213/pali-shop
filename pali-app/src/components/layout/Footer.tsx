@@ -34,7 +34,7 @@ export default function Footer() {
               <li><Link href="/faq" className="hover:text-yellow-400 transition-colors">שאלות ותשובות</Link></li>
               <li><Link href="/track" className="hover:text-yellow-400 transition-colors">מעקב חבילה</Link></li>
               <li><Link href="/terms" className="hover:text-yellow-400 transition-colors">תנאי שימוש</Link></li>
-              <li><Link href="/privacy" className="hover:text-yellow-400 transition-colors">מדיניות פרטיות</Link></li>
+              <li><Link href="/terms" className="hover:text-yellow-400 transition-colors">מדיניות פרטיות</Link></li>
             </ul>
           </div>
 

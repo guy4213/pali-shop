@@ -32,7 +32,7 @@
 | 1.6 Cart hover with items | ✅ PASS | `Header.tsx:195-233` — badge, item preview (up to 3), total, "לעגלה" link → `/cart` |
 | 1.7 Not logged in state | ✅ PASS | `Header.tsx:178-185` — "כניסה" Button linked to `/auth/login` |
 | 1.8 Logged in dropdown | ✅ PASS | `Header.tsx:102-175` — email, points balance, 4 links (dashboard, orders, wallet, settings), logout |
-| 1.9 Footer links | ⚠️ PARTIAL | `/terms` links work. `Footer.tsx:37` has `href="/privacy"` in help section — **no `/privacy` page exists** (see BUG-NEW-2). Bottom-bar both link to `/terms` which is fine. |
+| 1.9 Footer links | ✅ PASS | `/terms` links work. `Footer.tsx:37` help section now also points to `/terms` (BUG-NEW-2 fixed). Bottom-bar links also correct. |
 
 ---
 
@@ -299,7 +299,7 @@
 | 20.1 🔒 Viewing another user's order | ✅ PASS | `orders/[order_id]/page.tsx:45-58` — if `!admin && user?.email !== order.buyer_email` → shows "not found" page. Anonymous buyers (no session) cannot view PII. |
 | 20.2 🔒 Gift page without valid order | ✅ PASS | `gift/page.tsx:24-31` — invalid order ID shows "הזמנה לא תקפה" error UI |
 | 20.3 🔒 API create order with fake product | ✅ PASS | `orders/create/route.ts:36-38` — returns `{ error: 'מוצר לא נמצא' }` with 404 |
-| 20.4 🔒 Wallet for non-referrer user | ⚠️ PARTIAL | `wallet/page.tsx:18` — `redirect('/gift')` which (with no `?order=`) redirects to `/`. Graceful — no crash — but creates a silent double-bounce to homepage (see BUG-NEW-1). |
+| 20.4 🔒 Wallet for non-referrer user | ✅ PASS | `wallet/page.tsx:18` — now `redirect('/')` directly. No double-bounce. (BUG-NEW-1 fixed) |
 
 ---
 
@@ -404,12 +404,12 @@ No `/privacy` page exists in the codebase (only `/terms`). Clicking this link in
 | 17 | N10 | Low | Withdrawal API accepted non-numeric bank codes | ✅ FIXED |
 | 18 | N11 | Low | Escalation form had no email field | ✅ FIXED |
 
-## New Bugs Found in Pass 3
+## New Bugs Found in Pass 3 — Both Fixed
 
-| # | ID | Severity | Description | File |
-|---|----|----------|-------------|------|
-| 19 | NEW-1 | Low–Med | Wallet page for non-referrer double-bounces: `/wallet` → `/gift` → `/` | `wallet/page.tsx:18` |
-| 20 | NEW-2 | Low | Footer help section links to `/privacy` which does not exist | `Footer.tsx:37` |
+| # | ID | Severity | Description | Status |
+|---|----|----------|-------------|--------|
+| 19 | NEW-1 | Low–Med | Wallet page for non-referrer double-bounced: `/wallet` → `/gift` → `/` | ✅ FIXED — `wallet/page.tsx:18`: `redirect('/')` |
+| 20 | NEW-2 | Low | Footer help section linked to `/privacy` which does not exist | ✅ FIXED — `Footer.tsx:37`: `href="/terms"` |
 
 ## Open Spec Gaps (not bugs — missing features)
 
@@ -428,11 +428,11 @@ No `/privacy` page exists in the codebase (only `/terms`). Clicking this link in
 | Metric | Value |
 |--------|-------|
 | Tests run | 155 (170 total minus 15 browser-only) |
-| ✅ PASS | 148 (95.5%) |
+| ✅ PASS | 150 (96.8%) |
 | ❌ FAIL | 1 (Test 13.4 — no share buttons on order confirmation) |
-| ⚠️ PARTIAL | 4 (Tests 1.9, 20.4, 22.4, 22.5) |
+| ⚠️ PARTIAL | 2 (Tests 22.4, 22.5) |
 | 🔲 Browser-only | 15 (Sections 18 + 19) |
-| 🐛 New bugs discovered | 2 (NEW-1, NEW-2) |
+| 🐛 New bugs found and fixed | 2 (NEW-1, NEW-2) |
 
 ---
 

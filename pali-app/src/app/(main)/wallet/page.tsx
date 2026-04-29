@@ -15,7 +15,7 @@ export default async function WalletPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!referrer) redirect('/gift')
+  if (!referrer) redirect('/')
 
   const [balance, transactions, withdrawalRequests] = await Promise.all([
     getBalance(referrer.id),
