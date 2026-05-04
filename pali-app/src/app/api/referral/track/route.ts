@@ -13,11 +13,16 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createServiceClient()
 
-    await supabase.from('referral_clicks').insert({
+    const { error } = await supabase.from('referral_clicks').insert({
       referral_code: code,
       ip_address: ip,
       user_agent: userAgent,
     })
+
+    if (error) {
+      console.error('[referral/track] insert failed:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true })
   } catch {

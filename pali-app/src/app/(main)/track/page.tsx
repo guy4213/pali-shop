@@ -61,7 +61,7 @@ function SearchForm({ orderId, contact }: { orderId?: string; contact?: string }
             type="text"
             required
             defaultValue={orderId ?? ''}
-            placeholder="e.g. a1b2c3d4..."
+            placeholder="e.g. e86af9c9-b7eb-466c-875b-4854a8308ff3"
             dir="ltr"
             className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder:text-gray-300"
           />
@@ -189,6 +189,11 @@ export default async function TrackPage({ searchParams }: PageProps) {
 
   if (hasQuery) {
     const supabase = await createClient()
+    const {
+  data: { user },
+} = await supabase.auth.getUser()
+
+console.log('USER:', user)
     const { data } = await supabase
       .from('orders')
       .select(`
@@ -199,7 +204,8 @@ export default async function TrackPage({ searchParams }: PageProps) {
         products ( name )
       `)
       .eq('id', order_id)
-      .or(`buyer_email.eq.${contact},buyer_phone.eq.${contact}`)
+      
+      // .or(`buyer_email.eq.${contact},buyer_phone.eq.${contact}`)
       .maybeSingle()
 
     if (!data) {

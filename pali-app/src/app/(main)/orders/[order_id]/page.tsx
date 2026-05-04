@@ -13,6 +13,10 @@ export default async function OrderConfirmationPage({ params }: Props) {
   const { order_id } = await params
   const supabase = await createServiceClient()
 
+  const authClient = await createClient()
+  const { data: { user } } = await authClient.auth.getUser()
+  const admin = await isAdmin()
+
   const { data: order } = await supabase
     .from('orders')
     .select(`
@@ -30,17 +34,30 @@ export default async function OrderConfirmationPage({ params }: Props) {
     .eq('id', order_id)
     .single()
 
-  const { data: existingClaim } = await supabase
+  // Check by auth user email — this matches what gift_claims stores (form email = auth email)
+  // Covers all orders: if this person claimed a gift for ANY order, hide the CTA
+  console.log('[order page] user?.email:', user?.email)
+
+  const { data: claimByEmail } = user?.email
+    ? await supabase
+        .from('gift_claims')
+        .select('id, email, order_id')
+        .eq('email', user.email)
+        .limit(1)
+        .maybeSingle()
+    : { data: null }
+
+  const { data: claimByOrderId } = await supabase
     .from('gift_claims')
-    .select('id')
-    .eq('email', order?.buyer_email ?? '')
+    .select('id, email, order_id')
+    .eq('order_id', order_id)
     .maybeSingle()
 
-  const hasClaimedGift = !!existingClaim
+  console.log('[order page] claimByEmail:', claimByEmail)
+  console.log('[order page] claimByOrderId:', claimByOrderId)
 
-  const authClient = await createClient()
-  const { data: { user } } = await authClient.auth.getUser()
-  const admin = await isAdmin()
+  const hasClaimedGift = !!(claimByEmail || claimByOrderId)
+  console.log('[order page] hasClaimedGift:', hasClaimedGift)
 
   if (order && !admin && user?.email !== order.buyer_email) {
     return (
@@ -110,7 +127,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
           <CardContent className="px-6 py-5 space-y-4">
 
             <Row label="מזהה הזמנה">
-              <span className="font-mono text-sm text-gray-600">{order.id.slice(0, 8).toUpperCase()}</span>
+              <span className="font-mono text-xs text-gray-600 break-all" dir="ltr">{order.id}</span>
             </Row>
 
             <Row label="מוצר">
