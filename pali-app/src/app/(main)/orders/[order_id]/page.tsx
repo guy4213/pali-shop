@@ -11,11 +11,11 @@ interface Props {
 
 export default async function OrderConfirmationPage({ params }: Props) {
   const { order_id } = await params
-  const supabase = await createServiceClient()
 
-  const authClient = await createClient()
-  const { data: { user } } = await authClient.auth.getUser()
   const admin = await isAdmin()
+
+  // Admins use service client (bypasses RLS); regular users use auth client (RLS enforces ownership)
+  const supabase = admin ? await createServiceClient() : await createClient()
 
   const { data: order } = await supabase
     .from('orders')
@@ -32,14 +32,16 @@ export default async function OrderConfirmationPage({ params }: Props) {
       )
     `)
     .eq('id', order_id)
-    .single()
+    .maybeSingle()
 
-  // Check by auth user email — this matches what gift_claims stores (form email = auth email)
-  // Covers all orders: if this person claimed a gift for ANY order, hide the CTA
-  console.log('[order page] user?.email:', user?.email)
+  // Use service client for gift_claims (not covered by orders RLS)
+  const serviceClient = admin ? supabase : await createServiceClient()
+
+  const authClient = await createClient()
+  const { data: { user } } = await authClient.auth.getUser()
 
   const { data: claimByEmail } = user?.email
-    ? await supabase
+    ? await serviceClient
         .from('gift_claims')
         .select('id, email, order_id')
         .eq('email', user.email)
@@ -47,33 +49,13 @@ export default async function OrderConfirmationPage({ params }: Props) {
         .maybeSingle()
     : { data: null }
 
-  const { data: claimByOrderId } = await supabase
+  const { data: claimByOrderId } = await serviceClient
     .from('gift_claims')
     .select('id, email, order_id')
     .eq('order_id', order_id)
     .maybeSingle()
 
-  console.log('[order page] claimByEmail:', claimByEmail)
-  console.log('[order page] claimByOrderId:', claimByOrderId)
-
   const hasClaimedGift = !!(claimByEmail || claimByOrderId)
-  console.log('[order page] hasClaimedGift:', hasClaimedGift)
-
-  if (order && !admin && user?.email !== order.buyer_email) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 text-center">
-        <Package size={56} className="text-gray-300 mb-4" />
-        <h1 className="text-xl font-bold text-gray-700 mb-2">ההזמנה לא נמצאה</h1>
-        <p className="text-gray-400 text-sm mb-6">
-          ייתכן שהקישור שגוי או שההזמנה לא קיימת במערכת.
-        </p>
-        <Link href="/" className="inline-flex items-center gap-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium">
-          <ArrowRight size={16} className="rtl-flip" />
-          חזרה לדף הבית
-        </Link>
-      </div>
-    )
-  }
 
   if (!order) {
     return (

@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
     const data = parsed.data
     const supabase = await createServiceClient()
 
+    // Resolve authenticated user once for both points logic and user_id stamping
+    const authClient = await createClient()
+    const { data: { user } } = await authClient.auth.getUser()
+
     // Look up product price
     const { data: product, error: productError } = await supabase
       .from('products')
@@ -44,10 +48,6 @@ export async function POST(req: NextRequest) {
       if (pointsToRedeem > product.price) {
         pointsToRedeem = product.price
       }
-
-      // Validate buyer has enough balance
-      const authClient = await createClient()
-      const { data: { user } } = await authClient.auth.getUser()
 
       if (user) {
         const { data: buyerReferrer } = await supabase
@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         points_redeemed: pointsToRedeem,
         status:          'paid',
         payment_status:  'paid',
+        user_id:         user?.id ?? null,
       })
       .select()
       .single()
@@ -94,22 +95,18 @@ export async function POST(req: NextRequest) {
     }
 
     // Deduct points now that the order exists
-    if (pointsToRedeem > 0) {
-      const authClient = await createClient()
-      const { data: { user } } = await authClient.auth.getUser()
-      if (user) {
-        const { data: buyerReferrer } = await supabase
-          .from('referrers')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-        if (buyerReferrer) {
-          await redeemPoints(
-            buyerReferrer.id,
-            pointsToRedeem,
-            `שימוש בנקודות להזמנה #${order.id.slice(0, 8)}`
-          )
-        }
+    if (pointsToRedeem > 0 && user) {
+      const { data: buyerReferrer } = await supabase
+        .from('referrers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      if (buyerReferrer) {
+        await redeemPoints(
+          buyerReferrer.id,
+          pointsToRedeem,
+          `שימוש בנקודות להזמנה #${order.id.slice(0, 8)}`
+        )
       }
     }
 

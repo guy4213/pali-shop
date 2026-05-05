@@ -35,7 +35,7 @@ const TIMELINE: ShippingStatus[] = [
 
 // ── Search form (pure HTML — no client JS needed) ────────────────────────────
 
-function SearchForm({ orderId, contact }: { orderId?: string; contact?: string }) {
+function SearchForm({ orderId }: { orderId?: string }) {
   return (
     <form
       method="GET"
@@ -46,7 +46,7 @@ function SearchForm({ orderId, contact }: { orderId?: string; contact?: string }
         <PackageSearch className="text-yellow-500" size={36} />
         <h2 className="text-xl font-black text-gray-900">מעקב הזמנה</h2>
         <p className="text-sm text-gray-500 text-center">
-          הזינו את מספר ההזמנה ואת כתובת המייל או הטלפון שלכם
+          הזינו את מספר ההזמנה שלכם
         </p>
       </div>
 
@@ -62,22 +62,6 @@ function SearchForm({ orderId, contact }: { orderId?: string; contact?: string }
             required
             defaultValue={orderId ?? ''}
             placeholder="e.g. e86af9c9-b7eb-466c-875b-4854a8308ff3"
-            dir="ltr"
-            className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder:text-gray-300"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="contact" className="text-sm font-semibold text-gray-700">
-            טלפון או מייל
-          </label>
-          <input
-            id="contact"
-            name="contact"
-            type="text"
-            required
-            defaultValue={contact ?? ''}
-            placeholder="05X-XXXXXXX או name@example.com"
             dir="ltr"
             className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder:text-gray-300"
           />
@@ -170,12 +154,11 @@ function StatusTimeline({ status }: { status: ShippingStatus }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 interface PageProps {
-  searchParams: { order_id?: string; contact?: string }
+  searchParams: { order_id?: string }
 }
 
 export default async function TrackPage({ searchParams }: PageProps) {
-  const { order_id, contact } = searchParams
-  const hasQuery = order_id && contact
+  const { order_id } = searchParams
 
   let order: {
     id: string
@@ -187,13 +170,8 @@ export default async function TrackPage({ searchParams }: PageProps) {
 
   let notFound = false
 
-  if (hasQuery) {
+  if (order_id) {
     const supabase = await createClient()
-    const {
-  data: { user },
-} = await supabase.auth.getUser()
-
-console.log('USER:', user)
     const { data } = await supabase
       .from('orders')
       .select(`
@@ -204,8 +182,6 @@ console.log('USER:', user)
         products ( name )
       `)
       .eq('id', order_id)
-      
-      // .or(`buyer_email.eq.${contact},buyer_phone.eq.${contact}`)
       .maybeSingle()
 
     if (!data) {
@@ -234,7 +210,7 @@ console.log('USER:', user)
         <h1 className="text-2xl font-black text-gray-900 mb-8">מעקב הזמנה</h1>
 
         {/* Always show the search form */}
-        <SearchForm orderId={order_id} contact={contact} />
+        <SearchForm orderId={order_id} />
 
         {/* Error state */}
         {notFound && (
@@ -243,7 +219,7 @@ console.log('USER:', user)
               לא נמצאה הזמנה עם הפרטים שהוזנו
             </p>
             <p className="text-red-500 text-xs mt-1">
-              אנא בדקו שמספר ההזמנה וכתובת המייל / הטלפון נכונים
+              אנא בדקו שמספר ההזמנה נכון ושאתם מחוברים לחשבון שביצע את הרכישה
             </p>
           </div>
         )}
