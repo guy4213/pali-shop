@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!referrer) redirect('/')
+  if (!referrer) redirect('/referrer-required')
 
   const [balance, clicksData, commissionsData, earningsData] = await Promise.all([
     getBalance(referrer.id),

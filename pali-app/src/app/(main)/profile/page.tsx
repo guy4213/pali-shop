@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { User, Save, ArrowRight, Loader2 } from 'lucide-react'
+import { User, Save, ArrowRight, Loader2, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,8 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 
 export default function ProfilePage() {
+  const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [form, setForm] = useState({
     full_name: '',
@@ -23,9 +26,15 @@ export default function ProfilePage() {
     bank_account: '',
   })
 
-  useEffect(() => {
-    fetch('/api/profile/update')
-      .then(r => r.json())
+  function fetchProfile() {
+    return fetch('/api/profile/update')
+      .then(r => {
+        if (r.status === 404) {
+          router.replace('/referrer-required')
+          return null
+        }
+        return r.json()
+      })
       .then(data => {
         if (data && !data.error) {
           setForm({
@@ -39,7 +48,10 @@ export default function ProfilePage() {
         }
       })
       .catch(() => {})
-      .finally(() => setInitialLoading(false))
+  }
+
+  useEffect(() => {
+    fetchProfile().finally(() => setInitialLoading(false))
   }, [])
 
   async function handleSave(e: React.FormEvent) {
@@ -55,7 +67,9 @@ export default function ProfilePage() {
         const { error } = await res.json()
         toast({ title: 'שגיאה בשמירה', description: error, variant: 'destructive' })
       } else {
-        toast({ title: 'הפרופיל עודכן בהצלחה!' })
+        await fetchProfile()
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
       }
     } catch {
       toast({ title: 'שגיאת רשת', variant: 'destructive' })
@@ -178,11 +192,21 @@ export default function ProfilePage() {
 
           <Button
             type="submit"
-            disabled={loading}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-5 gap-2"
+            disabled={loading || saved}
+            className={`w-full font-bold py-5 gap-2 transition-colors ${
+              saved
+                ? 'bg-green-500 hover:bg-green-500 text-white'
+                : 'bg-yellow-500 hover:bg-yellow-600 text-gray-900'
+            }`}
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {loading ? 'שומר...' : 'שמור שינויים'}
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : saved ? (
+              <CheckCircle size={16} />
+            ) : (
+              <Save size={16} />
+            )}
+            {loading ? 'שומר...' : saved ? 'הפרטים נשמרו!' : 'שמור שינויים'}
           </Button>
         </form>
       </div>
