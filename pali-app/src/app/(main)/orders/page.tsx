@@ -25,7 +25,6 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from('orders')
     .select('*, products(name, image_url)')
-    .eq('buyer_email', user.email!)
     .order('created_at', { ascending: false })
 
   const typedOrders = (orders ?? []) as OrderWithProduct[]

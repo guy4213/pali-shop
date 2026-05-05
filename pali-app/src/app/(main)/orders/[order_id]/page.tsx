@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { CheckCircle2, Package, Gift, ArrowRight } from 'lucide-react'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -10,8 +10,9 @@ interface Props {
 
 export default async function OrderConfirmationPage({ params }: Props) {
   const { order_id } = await params
-  const supabase = await createServiceClient()
 
+  // Use auth client so RLS limits visibility to the order owner
+  const supabase = await createClient()
   const { data: order } = await supabase
     .from('orders')
     .select(`
@@ -27,9 +28,11 @@ export default async function OrderConfirmationPage({ params }: Props) {
       )
     `)
     .eq('id', order_id)
-    .single()
+    .maybeSingle()
 
-  const { data: existingClaim } = await supabase
+  // Use service client for gift_claims (not user-scoped)
+  const serviceClient = await createServiceClient()
+  const { data: existingClaim } = await serviceClient
     .from('gift_claims')
     .select('id')
     .eq('email', order?.buyer_email ?? '')

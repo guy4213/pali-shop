@@ -13,9 +13,9 @@ const SHIPPING_STEPS = [
 export default async function TrackPage({
   searchParams,
 }: {
-  searchParams: { order_id?: string; contact?: string }
+  searchParams: { order_id?: string }
 }) {
-  const { order_id, contact } = searchParams
+  const { order_id } = searchParams
 
   let order: {
     id: string
@@ -26,13 +26,12 @@ export default async function TrackPage({
 
   let notFound = false
 
-  if (order_id && contact) {
+  if (order_id) {
     const supabase = await createClient()
     const { data } = await supabase
       .from('orders')
       .select('id, buyer_name, shipping_status, tracking_number')
       .eq('id', order_id)
-      .or(`buyer_email.eq.${contact},buyer_phone.eq.${contact}`)
       .maybeSingle()
 
     if (data) {
@@ -62,18 +61,6 @@ export default async function TrackPage({
               defaultValue={order_id ?? ''}
               required
               placeholder="הכנס מספר הזמנה"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-1">
-              אימייל או טלפון
-            </label>
-            <input
-              name="contact"
-              defaultValue={contact ?? ''}
-              required
-              placeholder="האימייל או הטלפון שהוזנו בהזמנה"
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
             />
           </div>
