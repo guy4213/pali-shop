@@ -1,4 +1,4 @@
--- Migration 006: Add user_id to orders for ownership-based access control
+-- Migration 008: Add user_id to orders for ownership-based access control
 
 -- 1. Add user_id column (nullable to avoid breaking existing rows)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
