@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/auth'
 import OrdersTable from './OrdersTable'
+import PermissionGuard from '@/components/admin/PermissionGuard'
 
 export default async function AdminOrdersPage() {
   if (!await isAdmin()) redirect('/')
@@ -37,20 +38,22 @@ export default async function AdminOrdersPage() {
     : order.products
 }))
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm"
-        >
-          <ArrowRight size={16} className="rtl-flip" />
-          חזרה לניהול
-        </Link>
+    <PermissionGuard permission="manage_orders">
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm"
+          >
+            <ArrowRight size={16} className="rtl-flip" />
+            חזרה לניהול
+          </Link>
 
-        <h1 className="text-2xl font-black text-gray-900 mb-6">הזמנות</h1>
+          <h1 className="text-2xl font-black text-gray-900 mb-6">הזמנות</h1>
 
-      <OrdersTable initialOrders={normalizedOrders} />
+          <OrdersTable initialOrders={normalizedOrders} />
+        </div>
       </div>
-    </div>
+    </PermissionGuard>
   )
 }
