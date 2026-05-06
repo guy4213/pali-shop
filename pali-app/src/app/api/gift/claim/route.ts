@@ -56,9 +56,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Anti-abuse: fast pre-check before doing expensive work.
-    // The real guard is the UNIQUE constraint on gift_claims.phone —
-    // if two concurrent requests slip past this check simultaneously,
-    // the DB insert below will still reject the duplicate with a 23505 error.
     const { data: existingClaim } = await supabase
       .from('gift_claims')
       .select('id')
@@ -73,9 +70,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Atomically decrement stock in a single UPDATE with a WHERE stock_count > 0 guard.
-    // Returns true if a row was updated (stock available), false if out of stock.
-    // Replaces the old SELECT-then-UPDATE pattern which had a race condition window.
+    // Atomically decrement stock
     const { data: stockOk, error: stockError } = await supabase
       .rpc('decrement_gift_stock', { p_gift_item_id: data.gift_item_id })
 
@@ -83,52 +78,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'המתנה אזלה מהמלאי' }, { status: 400 })
     }
 
-let authUser = null
+    // ─── Auth: invite or find existing user ──────────────────────────────────
+    let authUser = null
 
-const { data: createData } = await supabase.auth.admin.createUser({
-  email: data.email,
-  email_confirm: true,
-  user_metadata: { name: data.name, phone: data.phone },
-})
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? ''
+    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+      data.email,
+      {
+        redirectTo: `${siteUrl}/dashboard`,
+        data: { name: data.name, phone: data.phone },
+      }
+    )
 
-if (createData?.user) {
-  authUser = createData.user
-} else {
-  // יוזר כבר קיים — מצא אותו לפי אימייל
-  const { data: userList } = await supabase.auth.admin.listUsers({ perPage: 1000 })
-  authUser = userList?.users?.find(u => u.email === data.email) ?? null
-}
+    if (inviteData?.user) {
+      authUser = inviteData.user
+    } else {
+      // User already exists — find them
+      console.warn('Invite skipped (user may already exist):', inviteError?.message)
+      const { data: userList } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+      authUser = userList?.users?.find(u => u.email === data.email) ?? null
+    }
+
+    // ─── Referrer setup ──────────────────────────────────────────────────────
     let referrerId: string | null = null
     let referralCode = generateReferralCode()
 
     if (authUser) {
-      // Get product_id from the order's referral_code (the referrer's product)
+      // Get product_id from the order
       let productId: string | null = null
       if (data.order_id) {
-        const { data: order } = await supabase
+        const { data: orderRow } = await supabase
           .from('orders')
           .select('product_id')
           .eq('id', data.order_id)
           .single()
-        productId = order?.product_id || null
+        productId = orderRow?.product_id || null
       }
-     if (!productId && data.referral_code) {
-      const { data: parentReferrer } = await supabase
-        .from('referrers')
-        .select('product_id')
-        .eq('referral_code', data.referral_code)
-        .single()
-      productId = parentReferrer?.product_id || null
-    }
-if (!productId) {
-  const { data: defaultProduct } = await supabase
-    .from('products')
-    .select('id')
-    .eq('is_visible', true)
-    .limit(1)
-    .single()
-  productId = defaultProduct?.id || null
-}
+
+      if (!productId && data.referral_code) {
+        const { data: parentReferrer } = await supabase
+          .from('referrers')
+          .select('product_id')
+          .eq('referral_code', data.referral_code)
+          .single()
+        productId = parentReferrer?.product_id || null
+      }
+
+      if (!productId) {
+        const { data: defaultProduct } = await supabase
+          .from('products')
+          .select('id')
+          .eq('is_visible', true)
+          .limit(1)
+          .single()
+        productId = defaultProduct?.id || null
+      }
+
       // Create or get referrer record
       const { data: existingReferrer } = await supabase
         .from('referrers')
@@ -168,10 +173,7 @@ if (!productId) {
       }
     }
 
-    // Insert gift claim.
-    // If two concurrent requests both passed the pre-check above, the DB-level
-    // UNIQUE constraint on gift_claims.phone will reject the second insert with
-    // Postgres error code 23505. We catch that and return the same 409 message.
+    // ─── Insert gift claim ───────────────────────────────────────────────────
     const { error: claimError } = await supabase.from('gift_claims').insert({
       order_id: data.order_id || null,
       gift_item_id: data.gift_item_id,
@@ -183,7 +185,6 @@ if (!productId) {
     })
 
     if (claimError) {
-      // 23505 = unique_violation (phone already exists)
       if (claimError.code === '23505') {
         return NextResponse.json(
           { error: 'כבר תבעת מתנה בעבר. ניתן לתבוע מתנה אחת בלבד.' },
@@ -193,9 +194,8 @@ if (!productId) {
       throw claimError
     }
 
+    // ─── Send welcome email (always, new or existing user) ──────────────────
     const referralUrl = buildReferralUrl(referralCode)
-
-    // Send welcome email
     await sendWelcomeEmail(data.email, referralUrl)
 
     return NextResponse.json({

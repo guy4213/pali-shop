@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { Package, Users, ArrowDownToLine, Gift, MessageCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import AdminProductsTable from './AdminProductsTable'
-import { isAdmin } from '@/lib/auth'
+import { isAdmin, isSuperAdmin } from '@/lib/auth'
 
 export default async function AdminPage() {
   if (!await isAdmin()) redirect('/')
+  const superAdmin = await isSuperAdmin()
 
   const supabase = await createClient()
 
@@ -41,6 +42,9 @@ export default async function AdminPage() {
           <div className="flex gap-3">
             <Link href="/admin/withdrawals" className="text-sm text-blue-600 hover:underline">משיכות</Link>
             <Link href="/admin/referrers" className="text-sm text-blue-600 hover:underline">ממליצים</Link>
+            {superAdmin && (
+              <Link href="/admin/users" className="text-sm text-purple-600 hover:underline">ניהול משתמשים</Link>
+            )}
           </div>
         </div>
 

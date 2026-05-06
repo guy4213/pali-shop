@@ -20,17 +20,37 @@ const EMPTY_FORM = {
   name: '', slug: '', description: '', price: '', commission_amount: '', image_url: '', is_visible: false,
 }
 
+type FormErrors = Partial<Record<keyof typeof EMPTY_FORM, string>>
+
+function validateForm(form: typeof EMPTY_FORM): FormErrors {
+  const errors: FormErrors = {}
+  if (form.name.trim().length < 2) errors.name = 'שם חייב להכיל לפחות 2 תווים'
+  if (!/^[a-z0-9-]{2,}$/.test(form.slug)) errors.slug = 'אותיות קטנות באנגלית, מספרים ומקפים בלבד (לדוגמה: red-dress-xl)'
+  const price = parseFloat(form.price)
+  if (!form.price || isNaN(price) || price <= 0) errors.price = 'מחיר חייב להיות מספר חיובי'
+  const commission = parseFloat(form.commission_amount)
+  if (form.commission_amount === '' || isNaN(commission) || commission < 0) errors.commission_amount = 'עמלה חייבת להיות 0 או יותר'
+  return errors
+}
+
 export default function AdminProductsTable({ initialProducts }: Props) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [errors, setErrors] = useState<FormErrors>({})
   const { toast } = useToast()
+
+  function setField<K extends keyof typeof EMPTY_FORM>(key: K, value: typeof EMPTY_FORM[K]) {
+    setForm(f => ({ ...f, [key]: value }))
+    setErrors(e => ({ ...e, [key]: undefined }))
+  }
 
   function openNew() {
     setEditingId(null)
     setForm(EMPTY_FORM)
+    setErrors({})
     setDialogOpen(true)
   }
 
@@ -45,11 +65,17 @@ export default function AdminProductsTable({ initialProducts }: Props) {
       image_url: p.image_url || '',
       is_visible: p.is_visible,
     })
+    setErrors({})
     setDialogOpen(true)
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    const validationErrors = validateForm(form)
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors)
+      return
+    }
     setLoading(true)
 
     try {
@@ -175,33 +201,64 @@ export default function AdminProductsTable({ initialProducts }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="block mb-1 text-right">שם מוצר *</Label>
-                <Input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="text-right" />
+                <Input
+                  value={form.name}
+                  onChange={e => setField('name', e.target.value)}
+                  className={`text-right ${errors.name ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
+                />
+                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
               </div>
               <div>
                 <Label className="block mb-1 text-right">Slug *</Label>
-                <Input required value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} dir="ltr" placeholder="product-slug" />
+                <Input
+                  value={form.slug}
+                  onChange={e => setField('slug', e.target.value)}
+                  dir="ltr"
+                  placeholder="product-slug"
+                  className={errors.slug ? 'border-red-400 focus-visible:ring-red-400' : ''}
+                />
+                {errors.slug
+                  ? <p className="text-xs text-red-500 mt-1">{errors.slug}</p>
+                  : <p className="text-xs text-gray-400 mt-1" dir="ltr">לדוגמה: <span className="font-mono">red-dress-xl</span></p>
+                }
               </div>
             </div>
 
             <div>
               <Label className="block mb-1 text-right">תיאור</Label>
-              <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="text-right" rows={3} />
+              <Textarea value={form.description} onChange={e => setField('description', e.target.value)} className="text-right" rows={3} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="block mb-1 text-right">מחיר (₪) *</Label>
-                <Input required type="number" min="0" step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.price}
+                  onChange={e => setField('price', e.target.value)}
+                  className={errors.price ? 'border-red-400 focus-visible:ring-red-400' : ''}
+                />
+                {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
               </div>
               <div>
                 <Label className="block mb-1 text-right">עמלה (₪) *</Label>
-                <Input required type="number" min="0" step="0.01" value={form.commission_amount} onChange={e => setForm(f => ({ ...f, commission_amount: e.target.value }))} />
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.commission_amount}
+                  onChange={e => setField('commission_amount', e.target.value)}
+                  className={errors.commission_amount ? 'border-red-400 focus-visible:ring-red-400' : ''}
+                />
+                {errors.commission_amount && <p className="text-xs text-red-500 mt-1">{errors.commission_amount}</p>}
               </div>
             </div>
 
             <div>
               <Label className="block mb-1 text-right">URL תמונה</Label>
-              <Input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} dir="ltr" placeholder="/images/product.jpg" />
+              <Input value={form.image_url} onChange={e => setField('image_url', e.target.value)} dir="ltr" placeholder="/images/product.jpg" />
             </div>
 
             <div className="flex items-center gap-3">
