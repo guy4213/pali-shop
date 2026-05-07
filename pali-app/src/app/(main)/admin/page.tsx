@@ -5,6 +5,7 @@ import { Package, Users, ArrowDownToLine, Gift, MessageCircle } from 'lucide-rea
 import { Card, CardContent } from '@/components/ui/card'
 import AdminProductsTable from './AdminProductsTable'
 import { isAdmin, isSuperAdmin } from '@/lib/auth'
+import PermissionGuard from '@/components/admin/PermissionGuard'
 
 export default async function AdminPage() {
   if (!await isAdmin()) redirect('/')
@@ -65,7 +66,9 @@ export default async function AdminPage() {
 
         {/* Products Management */}
         <div id="products">
-          <AdminProductsTable initialProducts={products.data || []} />
+          <PermissionGuard permission="manage_products">
+            <AdminProductsTable initialProducts={products.data || []} />
+          </PermissionGuard>
         </div>
 
         {/* Gift Claims */}

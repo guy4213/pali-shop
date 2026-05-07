@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import WithdrawalsTable from './WithdrawalsTable'
 import { isAdmin, isSuperAdmin } from '@/lib/auth'
+import PermissionGuard from '@/components/admin/PermissionGuard'
 
 export default async function WithdrawalsPage() {
   if (!await isAdmin()) redirect('/')
@@ -23,15 +24,17 @@ export default async function WithdrawalsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <Link href="/admin" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
-          <ArrowRight size={16} className="rtl-flip" />
-          חזרה לניהול
-        </Link>
-        <h1 className="text-2xl font-black text-gray-900 mb-6">בקשות משיכה</h1>
-        <WithdrawalsTable initialRequests={requests || []} canApprove={canApprove} />
+    <PermissionGuard permission="manage_withdrawals">
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <Link href="/admin" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
+            <ArrowRight size={16} className="rtl-flip" />
+            חזרה לניהול
+          </Link>
+          <h1 className="text-2xl font-black text-gray-900 mb-6">בקשות משיכה</h1>
+          <WithdrawalsTable initialRequests={requests || []} canApprove={canApprove} />
+        </div>
       </div>
-    </div>
+    </PermissionGuard>
   )
 }

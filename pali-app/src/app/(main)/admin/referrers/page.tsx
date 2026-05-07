@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { isAdmin } from '@/lib/auth'
+import PermissionGuard from '@/components/admin/PermissionGuard'
 
 export default async function AdminReferrersPage() {
   if (!await isAdmin()) redirect('/')
@@ -35,6 +36,7 @@ export default async function AdminReferrersPage() {
   )
 
   return (
+    <PermissionGuard permission="manage_referrers">
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <Link href="/admin" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
@@ -79,5 +81,6 @@ export default async function AdminReferrersPage() {
         </Card>
       </div>
     </div>
+    </PermissionGuard>
   )
 }

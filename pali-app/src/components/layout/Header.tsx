@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   ChevronDown,
   History,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,7 +26,7 @@ import { usePathname } from 'next/navigation'
 
 
 export default function Header() {
-    const { userEmail, isAdmin, balance } = useUser()
+    const { userEmail, isAdmin, isSuperAdmin, balance } = useUser()
 
   const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
@@ -161,6 +162,16 @@ export default function Header() {
                     >
                       <LayoutDashboard size={16} />
                       פאנל ניהול
+                    </Link>
+                  )}
+                  {isSuperAdmin && (
+                    <Link
+                      href="/admin/permissions"
+                      className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${pathname === '/admin/permissions' ? 'bg-purple-50 text-purple-700 font-semibold' : 'text-purple-700 hover:bg-purple-50'}`}
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <ShieldCheck size={16} />
+                      ניהול הרשאות
                     </Link>
                   )}
                   <div className="border-t border-gray-100 mt-1 pt-1">
